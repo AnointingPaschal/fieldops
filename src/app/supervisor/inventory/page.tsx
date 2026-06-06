@@ -1,104 +1,122 @@
 'use client';
 import { useState } from 'react';
-import { Search, Package, Plus, ChevronLeft } from 'lucide-react';
-import BottomNav from '@/components/layout/BottomNav';
-import { MOCK_INVENTORY } from '@/data/mockData';
+import { Search, Plus } from 'lucide-react';
+import AppShell from '@/components/layout/AppShell';
+import { INVENTORY } from '@/data/mockData';
 
 const CATS = ['All','Signage','Traffic Control','Barricades','Lighting','PPE'];
 
 export default function InventoryPage() {
   const [search, setSearch] = useState('');
-  const [cat, setCat] = useState('All');
-  const filtered = MOCK_INVENTORY.filter(i =>
-    (cat==='All'||i.category===cat) && i.name.toLowerCase().includes(search.toLowerCase())
+  const [cat, setCat]       = useState('All');
+  const filtered = INVENTORY.filter(i =>
+    (cat==='All'||i.cat===cat) && i.name.toLowerCase().includes(search.toLowerCase())
   );
-  const total = MOCK_INVENTORY.reduce((s,i)=>s+i.total,0);
-  const out   = MOCK_INVENTORY.reduce((s,i)=>s+i.out,0);
-  const low   = MOCK_INVENTORY.filter(i=>i.available/i.total<0.3).length;
-
-  const getStatus = (item: typeof MOCK_INVENTORY[0]) => {
-    const p = item.available/item.total;
-    if(p===0)   return {l:'Out', c:'#DC2626', bg:'rgba(220,38,38,0.10)'};
-    if(p<0.3)   return {l:'Low', c:'#DC2626', bg:'rgba(220,38,38,0.10)'};
-    if(p<0.5)   return {l:'Med', c:'#F59E0B', bg:'rgba(245,158,11,0.10)'};
-    return           {l:'OK',  c:'#16A34A', bg:'rgba(22,163,74,0.10)'};
+  const total = INVENTORY.reduce((s,i)=>s+i.total,0);
+  const out   = INVENTORY.reduce((s,i)=>s+i.out,0);
+  const low   = INVENTORY.filter(i=>i.avail/i.total<0.3).length;
+  const getS  = (i: typeof INVENTORY[0]) => {
+    const p = i.avail/i.total;
+    if(p===0)  return {l:'Out',c:'#DC2626',bg:'#FEF2F2'};
+    if(p<0.3)  return {l:'Low',c:'#DC2626',bg:'#FEF2F2'};
+    if(p<0.5)  return {l:'Med',c:'#D97706',bg:'#FFFBEB'};
+    return          {l:'OK', c:'#16A34A',bg:'#F0FDF4'};
   };
 
   return (
-    <div className="app-shell">
-      <div className="page-content">
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 pt-5 pb-3">
-          <h1 className="text-2xl font-black text-text-primary">Inventory</h1>
-          <button className="w-9 h-9 rounded-full flex items-center justify-center shadow-card bg-white border border-gray-200">
-            <Plus className="w-5 h-5 text-primary" />
-          </button>
+    <AppShell role="supervisor" userName="Justin Okeke">
+      <div className="p-4 md:p-6 space-y-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-black text-text-primary">Inventory</h1>
+            <p className="text-sm text-text-muted">Real-time stock levels</p>
+          </div>
+          <button className="btn-navy"><Plus className="w-4 h-4"/>Add Item</button>
         </div>
 
-        {/* Stat pills */}
-        <div className="flex gap-3 px-4 mb-4">
-          {[
-            {l:'Total', v:total, c:'#2563EB', bg:'#EFF6FF'},
-            {l:'Out',   v:out,   c:'#F59E0B', bg:'#FFFBEB'},
-            {l:'Low',   v:low,   c:'#DC2626', bg:'#FEF2F2'},
-          ].map((s,i)=>(
-            <div key={i} className="flex-1 rounded-2xl p-3 text-center border" style={{background:s.bg,borderColor:s.c+'30'}}>
-              <p className="text-xl font-black" style={{color:s.c}}>{s.v}</p>
-              <p className="text-[11px] font-semibold text-text-muted mt-0.5">{s.l}</p>
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-3">
+          {[{l:'Total Items',v:total,c:'text-sky'},{l:'Out/Rented',v:out,c:'text-warn'},{l:'Low Stock',v:low,c:'text-fail'}].map((s,i)=>(
+            <div key={i} className="card text-center">
+              <p className={`text-3xl font-black ${s.c}`}>{s.v}</p>
+              <p className="text-xs text-text-muted font-semibold mt-1">{s.l}</p>
             </div>
           ))}
         </div>
 
-        {/* Search */}
-        <div className="px-4 mb-3">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+        {/* Search + cats */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted"/>
             <input type="text" placeholder="Search inventory…" value={search}
-              onChange={e=>setSearch(e.target.value)} className="input pl-11" />
+              onChange={e=>setSearch(e.target.value)} className="input pl-11"/>
+          </div>
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+            {CATS.map(c=>(
+              <button key={c} onClick={()=>setCat(c)} className={cat===c?'chip-on':'chip-off'}>{c}</button>
+            ))}
           </div>
         </div>
 
-        {/* Category scroll */}
-        <div className="flex gap-2 px-4 mb-4 overflow-x-auto pb-1" style={{scrollbarWidth:'none'}}>
-          {CATS.map(c=>(
-            <button key={c} onClick={()=>setCat(c)}
-              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap border transition-all flex-shrink-0 ${
-                cat===c ? 'bg-navy text-white border-navy' : 'bg-white text-text-muted border-gray-200'
-              }`}>{c}</button>
-          ))}
-        </div>
-
-        {/* List */}
-        <div className="section-card mx-4">
-          {filtered.map(item=>{
-            const status=getStatus(item);
-            const pct=item.available/item.total;
-            return (
-              <div key={item.id} className="list-row">
-                <div className="w-11 h-11 rounded-2xl bg-gray-100 flex items-center justify-center flex-shrink-0">
-                  <Package className="w-5 h-5 text-gray-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-text-primary text-sm">{item.name}</p>
-                  <p className="text-[11px] text-text-muted mt-0.5">{item.category}</p>
-                  <div className="flex items-center gap-2 mt-1.5">
-                    <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full" style={{width:`${pct*100}%`,background:status.c}}/>
+        {/* Table (desktop) / Cards (mobile) */}
+        <div className="card !p-0 overflow-hidden">
+          {/* Desktop table */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="tbl">
+              <thead><tr>
+                {['Item','Category','Available','Total','Out','Status','Stock'].map(h=><th key={h}>{h}</th>)}
+              </tr></thead>
+              <tbody>
+                {filtered.map(item=>{
+                  const s=getS(item); const pct=item.avail/item.total;
+                  return (
+                    <tr key={item.id}>
+                      <td><p className="font-semibold text-text-primary">{item.name}</p></td>
+                      <td><span className="badge bg-slate-100 text-text-secondary">{item.cat}</span></td>
+                      <td><span className="font-bold" style={{color:s.c}}>{item.avail}</span></td>
+                      <td className="text-text-secondary">{item.total}</td>
+                      <td className="text-text-muted">{item.out}</td>
+                      <td><span className="badge" style={{background:s.bg,color:s.c}}>{s.l}</span></td>
+                      <td>
+                        <div className="flex items-center gap-2">
+                          <div className="w-24 progress-track">
+                            <div className="progress-fill" style={{width:`${pct*100}%`,background:s.c}}/>
+                          </div>
+                          <span className="text-xs text-text-muted">{Math.round(pct*100)}%</span>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          {/* Mobile list */}
+          <div className="md:hidden">
+            {filtered.map(item=>{
+              const s=getS(item); const pct=item.avail/item.total;
+              return (
+                <div key={item.id} className="row">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-semibold text-text-primary text-sm">{item.name}</p>
+                      <span className="badge" style={{background:s.bg,color:s.c}}>{s.l}</span>
                     </div>
-                    <span className="text-[10px] font-bold" style={{color:status.c}}>{Math.round(pct*100)}%</span>
+                    <p className="text-xs text-text-muted mt-0.5">{item.cat}</p>
+                    <div className="progress-track mt-1.5 w-32">
+                      <div className="progress-fill" style={{width:`${pct*100}%`,background:s.c}}/>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="font-bold text-sm" style={{color:s.c}}>{item.avail}</p>
+                    <p className="text-xs text-text-muted">of {item.total}</p>
                   </div>
                 </div>
-                <div className="text-right flex-shrink-0 ml-2">
-                  <span className="status-badge" style={{background:status.bg,color:status.c}}>{status.l}</span>
-                  <p className="text-xs font-bold text-text-primary mt-1">{item.available}<span className="text-text-muted font-normal">/{item.total}</span></p>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-        <div className="h-4"/>
       </div>
-      <BottomNav role="supervisor" />
-    </div>
+    </AppShell>
   );
 }

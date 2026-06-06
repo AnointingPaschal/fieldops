@@ -2,15 +2,16 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'FieldOps',
-  description: 'Alberta Safety Control — Field Operations',
-  themeColor: '#0F1A2E',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
+  title: 'FieldOps — Alberta Safety Control',
+  description: 'Field operations management platform',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
       <body>{children}</body>
     </html>
   );
