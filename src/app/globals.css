@@ -1,72 +1,98 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
   body {
-    background-color: #F0F4F8;
+    background: #E5E5EA;
     color: #0F172A;
     font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
   }
-  ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: #F0F4F8; }
-  ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: #FF6B35; }
+  ::-webkit-scrollbar { display: none; }
 }
 
 @layer components {
-  .card {
-    @apply bg-white border border-slate-100 rounded-2xl p-5 shadow-card;
+  /* App shell — centered mobile container */
+  .app-shell {
+    @apply max-w-app mx-auto min-h-screen bg-bg relative flex flex-col overflow-hidden;
   }
-  .btn-primary {
-    @apply bg-gradient-primary text-white font-bold rounded-xl px-5 py-3 transition-all
-           hover:shadow-glow hover:scale-[1.02] active:scale-[0.98];
+
+  /* Scrollable page content (leaves room for bottom nav) */
+  .page-content {
+    @apply flex-1 overflow-y-auto pb-24;
+    -webkit-overflow-scrolling: touch;
   }
-  .btn-ghost {
-    @apply bg-white border border-slate-200 text-text-secondary rounded-xl px-4 py-2.5
-           hover:border-slate-300 hover:text-text-primary transition-all shadow-sm;
+
+  /* Dark navy hero card (like Stilex portfolio card) */
+  .hero-card {
+    @apply rounded-3xl mx-4 mt-4 p-5 shadow-navy overflow-hidden relative;
+    background: linear-gradient(160deg, #1E2F47 0%, #0F1A2E 100%);
   }
-  .btn-dark {
-    @apply bg-navy text-white font-semibold rounded-2xl px-4 py-3 flex flex-col items-center gap-2
-           hover:bg-navy-light transition-all;
+
+  /* Glass sub-card inside hero */
+  .glass-card {
+    @apply rounded-2xl p-3.5 flex flex-col;
+    background: rgba(255,255,255,0.07);
   }
-  .input {
-    @apply bg-white border border-slate-200 rounded-xl px-4 py-3 text-text-primary placeholder-text-muted
-           focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all w-full shadow-sm;
+
+  /* Dark action button (like Send/Receive/Swap) */
+  .action-btn {
+    @apply flex flex-col items-center gap-2 py-4 rounded-2xl transition-all active:scale-95;
+    background: #131F30;
   }
-  .badge {
-    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold;
+
+  /* White section card */
+  .section-card {
+    @apply bg-white rounded-3xl mx-4 shadow-card overflow-hidden;
   }
-  .sidebar-item {
-    @apply flex items-center gap-3 px-4 py-3 rounded-xl text-text-secondary
-           hover:bg-slate-50 hover:text-text-primary transition-all cursor-pointer text-sm font-medium;
-  }
-  .sidebar-item.active {
-    @apply bg-primary/10 text-primary font-semibold border border-primary/20;
-  }
-  .stat-card {
-    @apply bg-white border border-slate-100 rounded-2xl p-5 shadow-card
-           hover:shadow-card-md hover:border-primary/20 transition-all cursor-pointer;
-  }
+
+  /* List row — like asset rows in Stilex */
   .list-row {
-    @apply flex items-center gap-4 px-5 py-4 hover:bg-slate-50 transition-colors cursor-pointer
-           border-b border-slate-50 last:border-0;
+    @apply flex items-center gap-3.5 px-4 py-3.5 border-b border-gray-50 last:border-0 active:bg-gray-50 transition-colors;
+  }
+
+  /* Token-style icon circle */
+  .token-icon {
+    @apply w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 text-lg font-black;
+  }
+
+  /* Bottom nav */
+  .bottom-nav {
+    @apply fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-app bg-white border-t border-gray-100 shadow-nav z-50;
+  }
+
+  /* Pill button */
+  .pill {
+    @apply flex items-center gap-1.5 bg-white border border-gray-200 rounded-full px-3.5 py-2 text-sm font-semibold text-text-primary shadow-sm;
+  }
+
+  /* Input */
+  .input {
+    @apply w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3.5 text-text-primary text-[15px]
+           placeholder-text-muted focus:outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/10 transition-all;
+  }
+
+  /* Primary button */
+  .btn-primary {
+    @apply w-full bg-primary-grad text-white font-bold text-[15px] rounded-2xl py-4 flex items-center justify-center gap-2 active:scale-[0.98] transition-all;
+    background: linear-gradient(135deg, #FF6B35, #FF9A00);
+  }
+
+  /* Badge */
+  .status-badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold;
   }
 }
 
 @layer utilities {
   .text-gradient {
-    background: linear-gradient(135deg, #FF6B35, #FF9A00);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    background: linear-gradient(135deg,#FF6B35,#FF9A00);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
   }
-  .bg-gradient-primary { background: linear-gradient(135deg, #FF6B35, #FF9A00); }
-  .bg-navy { background-color: #0F1A2E; }
-  .bg-navy-light { background-color: #162032; }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 16px); }
 }

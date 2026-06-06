@@ -2,15 +2,16 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'FieldOps — Alberta Safety Control',
-  description: 'Real-time field operations platform for Alberta Safety Control',
-  themeColor: '#0A0C10',
+  title: 'FieldOps',
+  description: 'Alberta Safety Control — Field Operations',
+  themeColor: '#0F1A2E',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-bg text-text-primary antialiased">{children}</body>
+      <body>{children}</body>
     </html>
   );
 }

@@ -1,67 +1,83 @@
 'use client';
 import { useState } from 'react';
-import { Share2, FileText, Clock } from 'lucide-react';
-import Sidebar from '@/components/layout/Sidebar';
-import TaskCard from '@/components/task/TaskCard';
-import { MOCK_TASKS } from '@/data/mockData';
+import { Share2, FileText, Clock, ChevronRight } from 'lucide-react';
+import BottomNav from '@/components/layout/BottomNav';
+import { MOCK_TASKS, STATUS_CONFIG, TASK_TYPE_CONFIG } from '@/data/mockData';
 
 export default function HistoryPage() {
   const [tab, setTab] = useState<'tasks'|'reports'>('tasks');
   return (
-    <div className="flex min-h-screen bg-bg">
-      <Sidebar role="supervisor" userName="Justin Okeke" userInitials="JO" />
-      <main className="flex-1 overflow-auto">
-        <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-lg border-b border-border px-8 py-4 flex items-center justify-between shadow-sm">
-          <div>
-            <h1 className="text-xl font-black text-text-primary">History</h1>
-            <p className="text-xs text-text-muted">Task log and weekly reports</p>
-          </div>
-          <button className="btn-ghost flex items-center gap-2 text-sm"><Share2 className="w-4 h-4" /> Export</button>
-        </header>
-        <div className="p-8">
-          <div className="flex gap-3 mb-6">
-            {(['tasks','reports'] as const).map(t => (
-              <button key={t} onClick={() => setTab(t)}
-                className={`px-5 py-2 rounded-full font-semibold text-sm border transition-all ${
-                  tab === t ? 'bg-primary text-white border-primary shadow-sm' : 'bg-white text-text-muted border-border hover:border-slate-300'
-                }`}>
-                {t === 'tasks' ? 'All Tasks' : 'Weekly Reports'}
-              </button>
-            ))}
-          </div>
-
-          {tab === 'tasks' ? (
-            <div>
-              <p className="text-xs font-bold text-text-muted uppercase tracking-wider mb-4">This Week — Jun 1–7, 2026</p>
-              <div className="grid gap-4">{MOCK_TASKS.map(t => <TaskCard key={t.id} task={t} />)}</div>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-xs font-bold text-text-muted uppercase tracking-wider mb-4">Automated Reports</p>
-              {[
-                { label:'Week of Jun 1–7',    date:'Jun 6, 2026',  tasks:8,  status:'Generating…', Icon:Clock,     color:'#F59E0B', bg:'#FFFBEB', border:'#FDE68A' },
-                { label:'Week of May 25–31',   date:'May 30, 2026', tasks:12, status:'Ready',       Icon:FileText,  color:'#2563EB', bg:'#EFF6FF', border:'#BFDBFE' },
-                { label:'Week of May 18–24',   date:'May 23, 2026', tasks:9,  status:'Ready',       Icon:FileText,  color:'#2563EB', bg:'#EFF6FF', border:'#BFDBFE' },
-              ].map((r,i) => (
-                <div key={i} className="bg-white border border-border rounded-2xl p-5 flex items-center gap-5 hover:border-primary/25 hover:shadow-card-md transition-all shadow-card">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: r.bg }}>
-                    <r.Icon className="w-6 h-6" style={{ color: r.color }} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-bold text-text-primary">{r.label}</p>
-                    <p className="text-sm text-text-muted mt-0.5">{r.tasks} tasks · {r.date}</p>
-                  </div>
-                  <span className="text-xs font-bold px-3 py-1 rounded-full" style={{ background: r.bg, color: r.color }}>{r.status}</span>
-                </div>
-              ))}
-              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-start gap-3 mt-4">
-                <FileText className="w-5 h-5 text-info flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-text-secondary">Reports auto-generate every Friday at 11:00 PM and are emailed to management.</p>
-              </div>
-            </div>
-          )}
+    <div className="app-shell">
+      <div className="page-content">
+        <div className="flex items-center justify-between px-4 pt-5 pb-3">
+          <h1 className="text-2xl font-black text-text-primary">History</h1>
+          <button className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm">
+            <Share2 className="w-4 h-4 text-text-secondary"/>
+          </button>
         </div>
-      </main>
+
+        {/* Tabs */}
+        <div className="flex gap-2 px-4 mb-5">
+          {(['tasks','reports'] as const).map(t=>(
+            <button key={t} onClick={()=>setTab(t)}
+              className={`px-5 py-2.5 rounded-full font-bold text-sm border transition-all ${
+                tab===t?'bg-navy text-white border-navy':'bg-white text-text-muted border-gray-200'
+              }`}>
+              {t==='tasks'?'All Tasks':'Reports'}
+            </button>
+          ))}
+        </div>
+
+        {tab==='tasks'?(
+          <div className="px-4">
+            <p className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3">Jun 1–7, 2026</p>
+            <div className="section-card">
+              {MOCK_TASKS.map(task=>{
+                const type=TASK_TYPE_CONFIG[task.type]||TASK_TYPE_CONFIG.delivery;
+                const status=STATUS_CONFIG[task.status]||STATUS_CONFIG.pending;
+                return (
+                  <div key={task.id} className="list-row">
+                    <div className="token-icon" style={{background:type.color+'18',fontSize:'20px'}}>{type.icon}</div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-text-primary text-[15px]">{task.contractor.name}</p>
+                      <p className="text-xs text-text-muted mt-0.5">{type.label} · {task.items.length} items</p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <span className="status-badge" style={{background:status.bg,color:status.color}}>{status.label}</span>
+                      <p className="text-xs text-text-muted mt-1">{task.employees.map((e:any)=>e.name.split(' ')[0]).join(', ')}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ):(
+          <div className="px-4 space-y-3">
+            {[
+              {l:'Week of Jun 1–7',  d:'Jun 6',  n:8,  s:'Generating…', I:Clock,    c:'#F59E0B',bg:'#FFFBEB'},
+              {l:'Week of May 25–31',d:'May 30', n:12, s:'Ready',       I:FileText, c:'#2563EB',bg:'#EFF6FF'},
+              {l:'Week of May 18–24',d:'May 23', n:9,  s:'Ready',       I:FileText, c:'#2563EB',bg:'#EFF6FF'},
+            ].map((r,i)=>(
+              <div key={i} className="bg-white rounded-2xl p-4 flex items-center gap-4 shadow-card border border-gray-100">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0" style={{background:r.bg}}>
+                  <r.I className="w-6 h-6" style={{color:r.c}}/>
+                </div>
+                <div className="flex-1">
+                  <p className="font-bold text-text-primary text-sm">{r.l}</p>
+                  <p className="text-xs text-text-muted mt-0.5">{r.n} tasks · {r.d}</p>
+                </div>
+                <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{background:r.bg,color:r.c}}>{r.s}</span>
+              </div>
+            ))}
+            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex gap-3">
+              <FileText className="w-5 h-5 text-info flex-shrink-0 mt-0.5"/>
+              <p className="text-xs text-text-secondary leading-relaxed">Reports auto-generated every Friday at 11:00 PM and emailed to management.</p>
+            </div>
+          </div>
+        )}
+        <div className="h-4"/>
+      </div>
+      <BottomNav role="supervisor"/>
     </div>
   );
 }
