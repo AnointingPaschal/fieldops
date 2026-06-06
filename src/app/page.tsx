@@ -13,107 +13,91 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1100));
-    setLoading(false);
+    await new Promise(r => setTimeout(r, 1000));
     router.push(role === 'supervisor' ? '/supervisor/dashboard' : '/worker/dashboard');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50/30 to-slate-100 flex items-center justify-center relative overflow-hidden">
-      {/* Decorative blobs */}
-      <div className="absolute top-[-80px] right-[-60px] w-[400px] h-[400px] rounded-full bg-primary/8 blur-3xl" />
-      <div className="absolute bottom-[-60px] left-[-40px] w-[320px] h-[320px] rounded-full bg-amber/8 blur-3xl" />
+    <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(160deg, #1A2744 0%, #0F1A2E 55%, #0F1A2E 100%)' }}>
+      {/* Top hero - Stilex style */}
+      <div className="flex-1 flex flex-col items-center justify-center px-6 pt-16 pb-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-72 h-72 rounded-full bg-white/5 -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full bg-white/5 translate-y-1/2 -translate-x-1/2" />
 
-      {/* Subtle grid */}
-      <div className="absolute inset-0 opacity-[0.025]"
-        style={{backgroundImage:'linear-gradient(#000 1px,transparent 1px),linear-gradient(90deg,#000 1px,transparent 1px)',backgroundSize:'48px 48px'}} />
+        <div className="relative z-10 text-center mb-10">
+          <div className="w-16 h-16 rounded-3xl bg-gradient-primary flex items-center justify-center shadow-glow mx-auto mb-5">
+            <Shield className="w-9 h-9 text-white" />
+          </div>
+          <h1 className="text-4xl font-black text-white tracking-tight">FieldOps</h1>
+          <p className="text-white/40 text-sm font-semibold uppercase tracking-widest mt-1">Alberta Safety Control</p>
+          <p className="text-white/60 text-base mt-3">Real-time field operations platform</p>
+        </div>
 
-      <div className="relative z-10 w-full max-w-md mx-auto px-4">
-        {/* Logo */}
-        <div className="flex items-center gap-4 mb-10">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-glow">
-            <Shield className="w-7 h-7 text-white" />
+        {/* Role chips */}
+        <div className="flex gap-3 mb-2">
+          {([
+            { value: 'supervisor', label: 'Supervisor',    Icon: Briefcase },
+            { value: 'worker',     label: 'Field Worker',  Icon: User },
+          ] as const).map(({ value, label, Icon }) => (
+            <button key={value} onClick={() => setRole(value)}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-full border-2 font-semibold text-sm transition-all ${
+                role === value
+                  ? 'border-primary bg-primary text-white shadow-glow'
+                  : 'border-white/20 text-white/60 hover:border-white/40 hover:text-white'
+              }`}>
+              <Icon className="w-4 h-4" />
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Bottom white card — slides up like a mobile sheet */}
+      <div className="bg-white rounded-t-[2.5rem] px-7 pt-8 pb-10 shadow-navy">
+        <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-7" />
+
+        <h2 className="text-2xl font-black text-text-primary mb-6">Sign In</h2>
+
+        <div className="space-y-4 mb-5">
+          <div>
+            <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Email</label>
+            <div className="relative">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+              <input type="email" placeholder="you@albertasafety.ca" value={email}
+                onChange={e => setEmail(e.target.value)} className="input pl-11" />
+            </div>
           </div>
           <div>
-            <h1 className="text-3xl font-black text-text-primary tracking-tight">FieldOps</h1>
-            <p className="text-xs text-text-muted font-semibold uppercase tracking-widest mt-0.5">Alberta Safety Control</p>
+            <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Password</label>
+            <div className="relative">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+              <input type={showPw ? 'text' : 'password'} placeholder="••••••••" value={password}
+                onChange={e => setPassword(e.target.value)} className="input pl-11 pr-11" />
+              <button onClick={() => setShowPw(!showPw)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary">
+                {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <button className="text-xs text-primary font-bold hover:underline">Forgot password?</button>
           </div>
         </div>
 
-        <div className="mb-8">
-          <h2 className="text-4xl font-black text-text-primary tracking-tight mb-2">Welcome back</h2>
-          <p className="text-text-secondary">Sign in to access your operations platform</p>
-        </div>
+        <button onClick={handleLogin} disabled={loading}
+          className="w-full btn-primary flex items-center justify-center gap-2 text-[15px] py-4 rounded-2xl">
+          {loading
+            ? <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Signing in…</span>
+            : <span className="flex items-center gap-2">Sign In <ArrowRight className="w-4 h-4" /></span>}
+        </button>
 
-        {/* Card */}
-        <div className="bg-white border border-border rounded-3xl p-8 shadow-card-md animate-fade-in">
-          {/* Role selector */}
-          <div className="mb-6">
-            <p className="text-xs font-bold text-text-muted uppercase tracking-widest mb-3">Sign in as</p>
-            <div className="grid grid-cols-2 gap-3">
-              {([
-                { value: 'supervisor', label: 'Supervisor', Icon: Briefcase },
-                { value: 'worker',     label: 'Field Worker', Icon: User },
-              ] as const).map(({ value, label, Icon }) => (
-                <button key={value} onClick={() => setRole(value)}
-                  className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left ${
-                    role === value
-                      ? 'border-primary bg-primary/5 text-primary'
-                      : 'border-border bg-slate-50 text-text-secondary hover:border-slate-300'
-                  }`}>
-                  <Icon className="w-5 h-5 flex-shrink-0" />
-                  <span className="font-semibold text-sm">{label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+        <p className="text-center text-xs text-text-muted mt-4 flex items-center justify-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-info inline-block" />
+          Demo — tap Sign In to continue as {role}
+        </p>
 
-          <div className="space-y-4 mb-6">
-            <div>
-              <label className="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-2">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-                <input type="email" placeholder="you@albertasafety.ca" value={email}
-                  onChange={e => setEmail(e.target.value)} className="input pl-11" />
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-2">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-                <input type={showPw ? 'text' : 'password'} placeholder="••••••••" value={password}
-                  onChange={e => setPassword(e.target.value)} className="input pl-11 pr-11" />
-                <button onClick={() => setShowPw(!showPw)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors">
-                  {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-            <div className="flex justify-end">
-              <button className="text-xs text-primary font-semibold hover:underline">Forgot password?</button>
-            </div>
-          </div>
-
-          <button onClick={handleLogin} disabled={loading}
-            className="w-full btn-primary flex items-center justify-center gap-2 text-base py-4">
-            {loading ? (
-              <span className="flex items-center gap-2">
-                <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                Signing in...
-              </span>
-            ) : (
-              <span className="flex items-center gap-2">Sign In <ArrowRight className="w-4 h-4" /></span>
-            )}
-          </button>
-
-          <p className="text-center text-xs text-text-muted mt-4 flex items-center justify-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-info inline-block" />
-            Demo mode — tap Sign In to continue as {role}
-          </p>
-        </div>
-
-        <p className="text-center text-xs text-text-muted mt-8">
-          Powered by <span className="text-primary font-bold">JUSTIN Codes & Company</span> · v1.0.0
+        <p className="text-center text-[11px] text-text-muted mt-6">
+          Powered by <span className="text-primary font-bold">JUSTIN Codes & Co</span>
         </p>
       </div>
     </div>

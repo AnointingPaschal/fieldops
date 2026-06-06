@@ -1,92 +1,117 @@
 'use client';
 import { useState } from 'react';
-import { LogIn, LogOut, MapPin, Camera, FileText, AlertCircle, ChevronRight } from 'lucide-react';
+import { LogIn, LogOut, MapPin, Camera, FileText, AlertCircle, ChevronRight, Package } from 'lucide-react';
 import Sidebar from '@/components/layout/Sidebar';
-import TaskCard from '@/components/task/TaskCard';
-import { MOCK_TASKS } from '@/data/mockData';
+import { MOCK_TASKS, STATUS_CONFIG } from '@/data/mockData';
 
 export default function WorkerDashboard() {
-  const [clockedIn,setClockedIn]=useState(false);
-  const [clockTime,setClockTime]=useState('');
+  const [clockedIn, setClockedIn] = useState(false);
+  const [clockTime, setClockTime] = useState('');
 
-  const handleClock=()=>{
-    if(!clockedIn){const now=new Date().toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});setClockTime(now);setClockedIn(true);}
-    else{setClockedIn(false);setClockTime('');}
+  const handleClock = () => {
+    if (!clockedIn) {
+      const now = new Date().toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit' });
+      setClockTime(now); setClockedIn(true);
+    } else { setClockedIn(false); setClockTime(''); }
   };
 
-  const myTasks=MOCK_TASKS.slice(0,3);
-  const activeTask=myTasks.find(t=>t.status==='in_transit'||t.status==='assigned');
+  const myTasks = MOCK_TASKS.slice(0, 3);
 
   return (
     <div className="flex min-h-screen bg-bg">
-      <Sidebar role="worker" userName="Marcus Reid" userInitials="MR"/>
+      <Sidebar role="worker" userName="Marcus Reid" userInitials="MR" />
       <main className="flex-1 overflow-auto">
-        <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-lg border-b border-border px-8 py-4 shadow-sm">
-          <p className="text-text-muted text-sm">Saturday, June 6, 2026</p>
-          <h1 className="text-xl font-black text-text-primary">Good morning, Marcus 👷</h1>
+        <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-slate-100 px-6 py-3.5 shadow-sm">
+          <p className="text-xs text-text-muted">Saturday, June 6, 2026</p>
+          <h1 className="text-[17px] font-black text-text-primary">Good morning, Marcus 👷</h1>
         </header>
-        <div className="p-8 space-y-6">
-          {/* Clock card */}
-          <div className={`rounded-3xl p-6 border-2 shadow-card-md transition-all ${clockedIn?'bg-green-50 border-green-200':'bg-white border-border'}`}>
-            <div className="flex items-center gap-6">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className={`w-2.5 h-2.5 rounded-full ${clockedIn?'bg-success animate-pulse':'bg-slate-300'}`}/>
-                  <span className={`text-sm font-semibold ${clockedIn?'text-green-700':'text-text-muted'}`}>
-                    {clockedIn?'Clocked In':'Not Clocked In'}
-                  </span>
+
+        <div className="p-6 space-y-5">
+          {/* Navy hero clock card — Stilex style */}
+          <div className="rounded-3xl p-6 shadow-navy relative overflow-hidden"
+            style={{ background: 'linear-gradient(160deg, #1A2744 0%, #0F1A2E 100%)' }}>
+            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/5" />
+            <div className="relative">
+              <p className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-1">Today's Shift</p>
+              <div className="flex items-end justify-between mb-5">
+                <div>
+                  <h2 className="text-4xl font-black text-white">{clockedIn ? clockTime : '—'}</h2>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full ${
+                      clockedIn ? 'bg-green-500/20 text-green-300' : 'bg-white/10 text-white/40'
+                    }`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${clockedIn ? 'bg-green-400 animate-pulse' : 'bg-white/30'}`} />
+                      {clockedIn ? 'Clocked In' : 'Not Clocked In'}
+                    </span>
+                    {clockedIn && <span className="text-white/30 text-xs">📍 GPS recorded</span>}
+                  </div>
                 </div>
-                <h2 className="text-3xl font-black text-text-primary">{clockedIn?clockTime:'—'}</h2>
-                {clockedIn&&<p className="text-green-600 text-sm mt-1">📍 GPS location recorded</p>}
-                {!clockedIn&&<p className="text-text-muted text-xs mt-1">Your supervisor has marked you available today</p>}
               </div>
-              <button onClick={handleClock}
-                className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-white transition-all hover:scale-105 shadow-sm ${
-                  clockedIn?'bg-danger hover:shadow-[0_4px_16px_rgba(220,38,38,0.3)]':'bg-gradient-primary hover:shadow-glow'
-                }`}>
-                {clockedIn?<><LogOut className="w-4 h-4"/>Clock Out</>:<><LogIn className="w-4 h-4"/>Clock In</>}
-              </button>
-            </div>
-          </div>
 
-          {/* Active task */}
-          {activeTask&&clockedIn&&(
-            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 flex items-center gap-4">
-              <div className="w-3 h-3 rounded-full bg-info animate-pulse flex-shrink-0"/>
-              <div className="flex-1">
-                <p className="font-bold text-info text-sm mb-0.5">Active Task</p>
-                <p className="font-bold text-text-primary">{activeTask.contractor.name}</p>
-                <p className="text-xs text-text-secondary">{activeTask.contractor.address}</p>
-              </div>
-              <ChevronRight className="w-5 h-5 text-info"/>
-            </div>
-          )}
-
-          {/* Quick actions */}
-          {clockedIn&&(
-            <div>
-              <h2 className="text-lg font-bold text-text-primary mb-4">Quick Actions</h2>
-              <div className="grid grid-cols-4 gap-4">
+              {/* Dark pill actions */}
+              <div className="grid grid-cols-4 gap-2">
+                <button onClick={handleClock}
+                  className="col-span-2 flex items-center justify-center gap-2 py-3 rounded-2xl font-bold text-white text-sm transition-all hover:scale-105"
+                  style={{ background: clockedIn ? '#DC2626' : '#FF6B35' }}>
+                  {clockedIn ? <><LogOut className="w-4 h-4" />Clock Out</> : <><LogIn className="w-4 h-4" />Clock In</>}
+                </button>
                 {[
-                  {icon:MapPin,  label:'Update Location', color:'#2563EB',bg:'#EFF6FF'},
-                  {icon:Camera,  label:'Upload Photo',    color:'#F59E0B',bg:'#FFFBEB'},
-                  {icon:FileText,label:'Add Note',        color:'#16A34A',bg:'#F0FDF4'},
-                  {icon:AlertCircle,label:'Report Issue', color:'#DC2626',bg:'#FEF2F2'},
-                ].map(({icon:Icon,label,color,bg},i)=>(
-                  <button key={i} className="bg-white border border-border rounded-2xl p-5 hover:border-primary/25 hover:shadow-card-md transition-all text-center shadow-card">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-3" style={{background:bg}}>
-                      <Icon className="w-5 h-5" style={{color}}/>
-                    </div>
-                    <p className="text-sm font-semibold text-text-secondary">{label}</p>
+                  { icon: MapPin,    label: 'Location' },
+                  { icon: Camera,    label: 'Photo' },
+                ].map(({ icon: Icon, label }, i) => (
+                  <button key={i} className="flex flex-col items-center gap-1.5 py-3 rounded-2xl transition-all hover:scale-105"
+                    style={{ background: 'rgba(255,255,255,0.10)' }}>
+                    <Icon className="w-5 h-5 text-white" />
+                    <span className="text-white text-[10px] font-semibold">{label}</span>
                   </button>
                 ))}
               </div>
             </div>
-          )}
+          </div>
 
+          {/* Quick actions row */}
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { icon: FileText,    label: 'Add Note',     color: '#16A34A', bg: '#F0FDF4' },
+              { icon: AlertCircle, label: 'Report Issue', color: '#DC2626', bg: '#FEF2F2' },
+            ].map(({ icon: Icon, label, color, bg }, i) => (
+              <button key={i} className="flex items-center gap-3 bg-white border border-slate-100 rounded-2xl p-4 shadow-card hover:shadow-card-md hover:border-primary/20 transition-all">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: bg }}>
+                  <Icon className="w-5 h-5" style={{ color }} />
+                </div>
+                <span className="font-semibold text-text-primary text-sm">{label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* My Tasks */}
           <div>
-            <h2 className="text-lg font-bold text-text-primary mb-4">My Tasks</h2>
-            <div className="grid gap-4">{myTasks.map(t=><TaskCard key={t.id} task={t}/>)}</div>
+            <h2 className="text-base font-black text-text-primary mb-3">My Tasks</h2>
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-card overflow-hidden">
+              {myTasks.map(task => {
+                const typeColors: Record<string, string> = { delivery: '#2563EB', pickup: '#F59E0B', setup: '#16A34A', teardown: '#DC2626' };
+                const color = typeColors[task.type] || '#64748B';
+                const statusConf = STATUS_CONFIG[task.status];
+                return (
+                  <div key={task.id} className="list-row group cursor-pointer">
+                    <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 text-lg"
+                      style={{ background: color + '15' }}>
+                      {task.type === 'delivery' ? '📦' : task.type === 'pickup' ? '🔄' : task.type === 'setup' ? '🔧' : '🗑️'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-text-primary text-sm group-hover:text-primary transition-colors">{task.contractor.name}</p>
+                      <p className="text-xs text-text-muted mt-0.5">{task.items.length} items · {task.type}</p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <span className="badge text-[10px]" style={{ background: statusConf.bg, color: statusConf.color }}>
+                        {statusConf.label}
+                      </span>
+                      <ChevronRight className="w-4 h-4 text-text-muted mt-1 ml-auto" />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </main>

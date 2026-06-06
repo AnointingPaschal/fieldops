@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -8,31 +8,35 @@
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   body {
-    background-color: #F0F2F7;
+    background-color: #F0F4F8;
     color: #0F172A;
     font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: #F0F2F7; }
-  ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: #F0F4F8; }
+  ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
   ::-webkit-scrollbar-thumb:hover { background: #FF6B35; }
 }
 
 @layer components {
   .card {
-    @apply bg-white border border-border rounded-2xl p-5 shadow-card;
+    @apply bg-white border border-slate-100 rounded-2xl p-5 shadow-card;
   }
   .btn-primary {
     @apply bg-gradient-primary text-white font-bold rounded-xl px-5 py-3 transition-all
            hover:shadow-glow hover:scale-[1.02] active:scale-[0.98];
   }
   .btn-ghost {
-    @apply bg-white border border-border text-text-secondary rounded-xl px-4 py-2.5
-           hover:border-primary/40 hover:text-text-primary transition-all shadow-card;
+    @apply bg-white border border-slate-200 text-text-secondary rounded-xl px-4 py-2.5
+           hover:border-slate-300 hover:text-text-primary transition-all shadow-sm;
+  }
+  .btn-dark {
+    @apply bg-navy text-white font-semibold rounded-2xl px-4 py-3 flex flex-col items-center gap-2
+           hover:bg-navy-light transition-all;
   }
   .input {
-    @apply bg-white border border-border rounded-xl px-4 py-3 text-text-primary placeholder-text-muted
+    @apply bg-white border border-slate-200 rounded-xl px-4 py-3 text-text-primary placeholder-text-muted
            focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all w-full shadow-sm;
   }
   .badge {
@@ -40,15 +44,18 @@
   }
   .sidebar-item {
     @apply flex items-center gap-3 px-4 py-3 rounded-xl text-text-secondary
-           hover:bg-slate-50 hover:text-text-primary transition-all cursor-pointer;
+           hover:bg-slate-50 hover:text-text-primary transition-all cursor-pointer text-sm font-medium;
   }
   .sidebar-item.active {
-    @apply bg-primary/8 text-primary font-semibold;
-    border: 1px solid rgba(255,107,53,0.2);
+    @apply bg-primary/10 text-primary font-semibold border border-primary/20;
   }
   .stat-card {
-    @apply bg-white border border-border rounded-2xl p-5 shadow-card
+    @apply bg-white border border-slate-100 rounded-2xl p-5 shadow-card
            hover:shadow-card-md hover:border-primary/20 transition-all cursor-pointer;
+  }
+  .list-row {
+    @apply flex items-center gap-4 px-5 py-4 hover:bg-slate-50 transition-colors cursor-pointer
+           border-b border-slate-50 last:border-0;
   }
 }
 
@@ -59,7 +66,7 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-  .bg-gradient-primary {
-    background: linear-gradient(135deg, #FF6B35, #FF9A00);
-  }
+  .bg-gradient-primary { background: linear-gradient(135deg, #FF6B35, #FF9A00); }
+  .bg-navy { background-color: #0F1A2E; }
+  .bg-navy-light { background-color: #162032; }
 }
