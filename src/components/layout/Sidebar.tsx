@@ -1,4 +1,5 @@
 'use client';
+import React from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Plus, Package, Calendar, ClockIcon, History,
@@ -6,7 +7,14 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 
-const SUPERVISOR_NAV = [
+type NavItem = {
+  href: string;
+  label: string;
+  icon: React.FC<{ className?: string }>;
+  accent?: boolean;
+};
+
+const SUPERVISOR_NAV: NavItem[] = [
   { href: '/supervisor/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/supervisor/create-task', label: 'Create Task', icon: Plus, accent: true },
   { href: '/supervisor/inventory', label: 'Inventory', icon: Package },
@@ -14,7 +22,7 @@ const SUPERVISOR_NAV = [
   { href: '/supervisor/history', label: 'History', icon: History },
 ];
 
-const WORKER_NAV = [
+const WORKER_NAV: NavItem[] = [
   { href: '/worker/dashboard', label: 'Dashboard', icon: Home },
   { href: '/worker/timesheet', label: 'Timesheet', icon: ClockIcon },
 ];
