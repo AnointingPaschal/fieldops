@@ -104,7 +104,6 @@ export default function LiveMapPage() {
     isCar:  !!w.activeTask,   // car icon for workers on tasks
   }));
 
-  const liveIds = workers.map(w => w.id);
   const active  = workers.filter(w => w.activeTask).length;
   const avail   = workers.filter(w => w.available && !w.activeTask).length;
 
@@ -193,7 +192,8 @@ export default function LiveMapPage() {
             <LeafletMap
               markers={mapMarkers}
               routes={showRoutes ? routes : {}}
-              liveWorkerIds={liveIds}
+              completionPin={undefined}
+              center={undefined}
               height={480}
               zoom={12}
             />
@@ -274,6 +274,8 @@ export default function LiveMapPage() {
                         className="overflow-hidden">
                         <div className="mt-3 pt-3 border-t border-line space-y-2">
                           <LeafletMap
+                            completionPin={undefined}
+                            center={undefined}
                             markers={[{
                               id:    w.id,
                               lat:   w.lat,
@@ -287,7 +289,6 @@ export default function LiveMapPage() {
                               isCar: !!w.activeTask,
                             }]}
                             routes={routePts.length > 1 ? { [w.id]: routePts } : {}}
-                            liveWorkerIds={[w.id]}
                             zoom={15}
                             height={220}
                           />

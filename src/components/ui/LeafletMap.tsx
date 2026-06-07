@@ -1,6 +1,5 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { supabase } from '@/lib/supabase';
 import { Layers, Satellite } from 'lucide-react';
 
 export interface MapMarker {
@@ -24,7 +23,7 @@ interface LeafletMapProps {
   markers:        MapMarker[];
   routes?:        Record<string, RoutePoint[]>;
   completionPin?: { lat: number; lng: number; label?: string };
-  liveWorkerIds?: string[];
+
   center?:        [number, number];
   zoom?:          number;
   height?:        number;
@@ -114,9 +113,9 @@ function popupHtml(label: string, sub?: string): string {
 }
 
 export default function LeafletMap({
-  markers, routes = {}, completionPin, liveWorkerIds = [],
+  markers, routes = {}, completionPin,
   center, zoom = 13, height = 380, className = '', initDelay = 0,
-}: LeafletMapProps) {
+}) {
   const divRef     = useRef<HTMLDivElement>(null);
   const mapRef     = useRef<any>(null);
   const LRef       = useRef<any>(null);
@@ -180,11 +179,12 @@ export default function LeafletMap({
     if (!L || !map) return;
     Object.values(polyObjs.current).flat().forEach((p:any) => p.remove());
     polyObjs.current = {};
+    const routeMap = routes as Record<string, RoutePoint[]>;
 
-    Object.entries(routes).forEach(([wid, pts], wi) => {
-      if (pts.length < 2) return;
+    Object.entries(routeMap).forEach(([wid, pts], wi) => {
+      if (!Array.isArray(pts) || pts.length < 2) return;
       const col  = ROUTE_COLORS[wi % ROUTE_COLORS.length];
-      const lls  = pts.map(p => [p.lat, p.lng]);
+      const lls  = (pts as RoutePoint[]).map((p: RoutePoint) => [p.lat, p.lng]);
       const n    = lls.length;
       const segs: any[] = [];
       const step = Math.max(1, Math.floor(n/10));
@@ -203,7 +203,7 @@ export default function LeafletMap({
         color:col, weight:4.5, opacity:1, lineCap:'round',
       }).addTo(map));
       // live dot at last point
-      const last = pts[n-1];
+      const last = (pts as RoutePoint[])[n-1];
       segs.push(L.circleMarker([last.lat,last.lng],{
         radius:5.5, color:'white', fillColor:col, fillOpacity:1, weight:2,
       }).addTo(map));
@@ -283,7 +283,7 @@ export default function LeafletMap({
   function fitAll(L: any, map: any) {
     const pts: [number,number][] = [
       ...markers.map(m => [m.lat, m.lng] as [number,number]),
-      ...Object.values(routes).flat().map(p => [p.lat, p.lng] as [number,number]),
+      ...(Object.values(routes) as RoutePoint[][]).flat().map((p: RoutePoint) => [p.lat, p.lng] as [number,number]),
       ...(completionPin ? [[completionPin.lat, completionPin.lng] as [number,number]] : []),
     ];
     if (pts.length > 1) map.fitBounds(L.latLngBounds(pts), { padding:[40,40], maxZoom:17, animate:true });
@@ -302,18 +302,7 @@ export default function LeafletMap({
     applyTiles(tileMode);
   }, [tileMode]);
 
-  // ── realtime subscription ────────────────────────────────
-  useEffect(() => {
-    if (!liveWorkerIds.length) return;
-    const ch = supabase.channel(`lmap-${liveWorkerIds.join('-')}`)
-      .on('postgres_changes', { event:'UPDATE', schema:'public', table:'profiles' }, p => {
-        const w = p.new as any;
-        if (!liveWorkerIds.includes(w.id) || !w.lat || !w.lng) return;
-        upsertMarker({ id:w.id, lat:w.lat, lng:w.lng, label:w.name, color:'orange', pulse:true, isCar:true });
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
-  }, [liveWorkerIds]);
+  // Realtime handled by parent — no internal subscription needed
 
   // ── invalidate on height change (accordion) ──────────────
   useEffect(() => {
