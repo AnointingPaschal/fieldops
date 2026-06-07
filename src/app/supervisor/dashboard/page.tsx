@@ -141,7 +141,7 @@ export default function SupervisorDashboard() {
                     return (
                       <motion.div key={task.id} variants={item}
                         className="row cursor-pointer"
-                        onClick={() => router.push(`/supervisor/task/${task.id}`)}>
+                        onClick={() => router.push(`/supervisor/tasks/${task.id}`)}>
                         <div className="w-9 h-9 rounded-lg shrink-0 flex items-center justify-center"
                           style={{ background: tm.color + '18' }}>
                           <Icon className="w-4 h-4" style={{ color: tm.color }} />
