@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   AlertTriangle, Package, Building2, ChevronRight,
   ChevronDown, ChevronUp, RefreshCw, FileText,
-  DollarSign, CheckCircle,
+  Phone, Mail, CheckCircle,
 } from 'lucide-react';
 import AppShell from '@/components/layout/AppShell';
 import { fetchDiscrepancyTasks, fetchCurrentUser } from '@/lib/api';
@@ -168,10 +168,27 @@ export default function DiscrepanciesPage() {
                           ))}
 
                           {/* Claim footer */}
-                          <div className="px-4 py-3 bg-warn/5 border-t border-warn/20 flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-[12px] text-warn font-semibold">
-                              <DollarSign className="w-4 h-4"/>
-                              {g.totalMissing+g.totalDamaged} item(s) to claim from {g.contractor.name}
+                          <div className="px-4 py-3 bg-slate-50 border-t border-line flex items-center justify-between flex-wrap gap-2">
+                            <p className="text-[12px] font-semibold text-text-secondary">
+                              <span className="font-black text-fail">{g.totalMissing + g.totalDamaged}</span>
+                              {' '}item{g.totalMissing + g.totalDamaged !== 1 ? 's' : ''} to claim
+                            </p>
+                            <div className="flex items-center gap-2">
+                              {g.contractor.phone && (
+                                <a href={'tel:' + g.contractor.phone}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky/10 border border-sky/25 text-sky text-[12px] font-bold hover:bg-sky/20 transition-colors">
+                                  <Phone className="w-3.5 h-3.5" /> Call
+                                </a>
+                              )}
+                              {g.contractor.contact_name && (
+                                <a href={'mailto:admin@albertasafetycontrol.com?subject=Discrepancy%20-%20' + encodeURIComponent(g.contractor.name)}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-navy/10 border border-navy/25 text-navy text-[12px] font-bold hover:bg-navy/20 transition-colors">
+                                  <Mail className="w-3.5 h-3.5" /> Email
+                                </a>
+                              )}
+                              {!g.contractor.phone && !g.contractor.contact_name && (
+                                <p className="text-[11px] text-text-muted italic">No contact info on file</p>
+                              )}
                             </div>
                           </div>
                         </div>
