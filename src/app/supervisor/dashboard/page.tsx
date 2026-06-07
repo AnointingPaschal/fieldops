@@ -85,7 +85,7 @@ export default function SupervisorDashboard() {
             variants={list} initial="hidden" animate="visible">
             {[
               { label:'New Task',  sub:'Create assignment',   href:'/supervisor/create-task', primary:true   },
-              { label:'Inventory', sub:'Check stock',         href:'/supervisor/inventory'                   },
+              { label:'History',   sub:'Past tasks & reports', href:'/supervisor/history'                    },
               { label:'Schedule',  sub:'Worker availability', href:'/supervisor/schedule'                    },
               { label:'Reports',   sub:'Weekly reports',      href:'/supervisor/history'                     },
             ].map(({ label, sub, href, primary }, i) => (
