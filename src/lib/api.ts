@@ -349,3 +349,25 @@ export async function fetchTaskRoute(taskId: string) {
     .order('recorded_at', { ascending: true });
   return (data || []) as { lat: number; lng: number; recorded_at: string; worker_id: string }[];
 }
+
+// ─── Fetch deployed tasks (items still out in the field) ──────
+export async function fetchDeployedTasks() {
+  const { data, error } = await supabase
+    .from('tasks')
+    .select(`
+      *,
+      contractor:contractors(*),
+      task_assignments(worker_id, worker:profiles(name)),
+      task_items(quantity, item:inventory_items(*))
+    `)
+    .in('type', ['Delivery', 'Set Up'])
+    .in('status', ['Assigned', 'Accepted', 'In Transit', 'Completed'])
+    .order('created_at', { ascending: false });
+
+  if (error) return [];
+  return (data || []).map((t: any) => ({
+    ...t,
+    workers: t.task_assignments?.map((a: any) => a.worker) || [],
+    items:   t.task_items?.map((ti: any) => ({ item: ti.item, quantity: ti.quantity })) || [],
+  }));
+}
