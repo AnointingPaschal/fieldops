@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Plus, Package, Calendar, History,
   Home, Clock, Settings, LogOut, Shield, Bell,
   ChevronRight, Users, Building2, Navigation,
-  ClipboardList,
+  ClipboardList, AlertTriangle,
 } from 'lucide-react';
 import type { Role } from '@/types';
 import { triggerNav } from '@/lib/navigation';
@@ -22,6 +22,7 @@ const SUP_SIDEBAR = [
   { href:'/supervisor/schedule',    label:'Schedule',    icon:Calendar        },
   { href:'/supervisor/history',     label:'History',     icon:History         },
   { href:'/supervisor/live-map',    label:'Live Map',    icon:Navigation      },
+  { href:'/supervisor/discrepancies', label:'Discrepancies',icon:AlertTriangle   },
 ];
 
 // ── Bottom nav (mobile only) — key items only ─────────────────

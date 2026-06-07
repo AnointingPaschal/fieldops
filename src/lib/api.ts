@@ -371,3 +371,39 @@ export async function fetchDeployedTasks() {
     items:   t.task_items?.map((ti: any) => ({ item: ti.item, quantity: ti.quantity })) || [],
   }));
 }
+
+// ─── Item Recovery (Pick Up / Tear Down) ─────────────────────
+export async function saveItemRecovery(records: {
+  task_id: string; item_id: string;
+  quantity_assigned: number; quantity_recovered: number;
+  quantity_damaged: number; quantity_missing: number; notes?: string;
+}[]) {
+  return supabase.from('task_item_recovery').upsert(records, { onConflict: 'task_id,item_id' });
+}
+
+export async function fetchItemRecovery(taskId: string) {
+  const { data } = await supabase
+    .from('task_item_recovery')
+    .select('*, item:inventory_items(*)')
+    .eq('task_id', taskId);
+  return data || [];
+}
+
+export async function fetchDiscrepancyTasks() {
+  // Tasks with at least one damaged or missing item
+  const { data } = await supabase
+    .from('task_item_recovery')
+    .select(`
+      task_id,
+      item_id,
+      quantity_assigned,
+      quantity_recovered,
+      quantity_damaged,
+      quantity_missing,
+      notes,
+      item:inventory_items(name, unit),
+      task:tasks(id, type, status, completed_at, contractor:contractors(name, address, contact_name, phone))
+    `)
+    .or('quantity_damaged.gt.0,quantity_missing.gt.0');
+  return data || [];
+}

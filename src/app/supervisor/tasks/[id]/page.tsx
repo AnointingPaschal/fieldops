@@ -6,7 +6,7 @@ import {
   ArrowLeft, Package, RefreshCw, Wrench, Trash2,
   MapPin, Phone, Calendar, Clock, Users, CheckCircle,
   AlertCircle, Loader2, ChevronRight, FileText,
-  Image as ImageIcon, User, X,
+  Image as ImageIcon, User, X, Download,
 } from 'lucide-react';
 import AppShell from '@/components/layout/AppShell';
 import Map from '@/components/ui/Map';
