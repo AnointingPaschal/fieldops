@@ -266,3 +266,55 @@ export async function fetchWorkerTasks(workerId: string) {
     items: t.task_items?.map((ti: any) => ({ item: ti.item, quantity: ti.quantity })) || [],
   }));
 }
+
+// ─── Complete task with GPS ───────────────────────────────────
+export async function completeTaskWithLocation(
+  taskId: string, workerId: string,
+  lat: number | null, lng: number | null,
+  notes?: string, photoUrl?: string
+) {
+  // Reverse geocode the completion point
+  let address: string | null = null;
+  if (lat && lng) {
+    try {
+      const r = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+        { headers: { 'Accept-Language': 'en' } }
+      );
+      const d = await r.json();
+      address = d?.display_name || null;
+    } catch { /* silently ignore */ }
+  }
+
+  await supabase.from('tasks').update({
+    status: 'Completed',
+    completed_at: new Date().toISOString(),
+    ...(lat && { completion_lat: lat, completion_lng: lng, completion_address: address }),
+  }).eq('id', taskId);
+
+  await supabase.from('task_updates').insert({
+    task_id: taskId, worker_id: workerId,
+    type: 'status', content: 'Completed' + (notes ? `: ${notes}` : ''),
+    photo_url: photoUrl || null, lat, lng,
+  });
+}
+
+// ─── Fetch workers with locations (for supervisor map) ────────
+export async function fetchWorkersWithLocations() {
+  const { data } = await supabase
+    .from('profiles')
+    .select(`
+      id, name, job_title, available, lat, lng, location_updated_at,
+      task_assignments(
+        task:tasks(id, type, status, contractor:contractors(name))
+      )
+    `)
+    .eq('role', 'worker')
+    .not('lat', 'is', null);
+  return (data || []).map((w: any) => ({
+    ...w,
+    activeTask: w.task_assignments
+      ?.map((a: any) => a.task)
+      .find((t: any) => t && !['Completed','Cancelled'].includes(t.status)) || null,
+  }));
+}

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LogIn, LogOut, MapPin, Camera, FileText, AlertCircle,
   ChevronRight, Loader2, Package, RefreshCw, Wrench, Trash2,
-  CheckCircle, X, Navigation,
+  CheckCircle, X, Navigation, Signal,
 } from 'lucide-react';
 import AppShell from '@/components/layout/AppShell';
 import {
@@ -19,39 +19,16 @@ const taskIcon: Record<string, any> = {
   'Delivery': Package, 'Pick Up': RefreshCw, 'Set Up': Wrench, 'Tear Down': Trash2,
 };
 
-// ── GPS hook ─────────────────────────────────────────────────
-function useGPS() {
-  const [gps,    setGps]    = useState<{ lat: number; lng: number } | null>(null);
-  const [denied, setDenied] = useState(false);
-
-  const request = (): Promise<{ lat: number; lng: number }> =>
-    new Promise((resolve, reject) => {
-      if (!navigator.geolocation) { reject(new Error('GPS not supported')); return; }
-      navigator.geolocation.getCurrentPosition(
-        p => {
-          const loc = { lat: p.coords.latitude, lng: p.coords.longitude };
-          setGps(loc); resolve(loc);
-        },
-        e => { setDenied(true); reject(e); },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
-    });
-
-  return { gps, denied, request };
-}
-
-// ── Modal ─────────────────────────────────────────────────────
-function ActionModal({
-  title, placeholder, onClose, onSubmit, isPhoto = false,
-}: {
+// ── Action modal ──────────────────────────────────────────────
+function ActionModal({ title, placeholder, isPhoto, onClose, onSubmit }: {
   title: string; placeholder: string; isPhoto?: boolean;
   onClose: () => void; onSubmit: (text: string, file?: File) => Promise<void>;
 }) {
-  const [text,    setText]    = useState('');
-  const [file,    setFile]    = useState<File | null>(null);
-  const [preview, setPreview] = useState('');
-  const [saving,  setSaving]  = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [text, setText]     = useState('');
+  const [file, setFile]     = useState<File | null>(null);
+  const [prev, setPrev]     = useState('');
+  const [saving, setSaving] = useState(false);
+  const ref = useRef<HTMLInputElement>(null);
 
   const submit = async () => {
     if (!text.trim() && !file) return;
@@ -74,30 +51,24 @@ function ActionModal({
         </div>
         <div className="p-5 space-y-3">
           {isPhoto && (
-            <div onClick={() => fileRef.current?.click()}
-              className="w-full h-32 rounded-xl border-2 border-dashed border-line hover:border-sky/50 bg-slate-50 hover:bg-sky/5 flex items-center justify-center cursor-pointer transition-colors overflow-hidden relative">
-              {preview
-                ? <img src={preview} alt="preview" className="w-full h-full object-cover" />
+            <div onClick={() => ref.current?.click()}
+              className="w-full h-32 rounded-xl border-2 border-dashed border-line hover:border-sky/50 bg-slate-50 cursor-pointer flex items-center justify-center overflow-hidden transition-colors">
+              {prev
+                ? <img src={prev} alt="preview" className="w-full h-full object-cover" />
                 : <div className="flex flex-col items-center gap-1.5 text-text-muted">
                     <Camera className="w-6 h-6" />
                     <p className="text-[12px] font-medium">Tap to take / choose photo</p>
                   </div>}
-              <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden"
+              <input ref={ref} type="file" accept="image/*" capture="environment" className="hidden"
                 onChange={e => {
                   const f = e.target.files?.[0];
                   if (!f) return;
-                  setFile(f);
-                  setPreview(URL.createObjectURL(f));
+                  setFile(f); setPrev(URL.createObjectURL(f));
                 }} />
             </div>
           )}
-          <textarea
-            className="textarea"
-            rows={3}
-            placeholder={placeholder}
-            value={text}
-            onChange={e => setText(e.target.value)}
-          />
+          <textarea className="textarea" rows={3} placeholder={placeholder}
+            value={text} onChange={e => setText(e.target.value)} />
         </div>
         <div className="flex gap-2 px-5 pb-5">
           <button onClick={onClose} className="btn-ghost flex-1">Cancel</button>
@@ -112,21 +83,26 @@ function ActionModal({
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────
+// ── Main ──────────────────────────────────────────────────────
 export default function WorkerDashboard() {
-  const router   = useRouter();
-  const { gps, denied, request: requestGPS } = useGPS();
+  const router = useRouter();
 
-  const [tasks,     setTasks]     = useState<Task[]>([]);
-  const [user,      setUser]      = useState<Profile | null>(null);
-  const [loading,   setLoading]   = useState(true);
-  const [clocking,  setClocking]  = useState(false);
-  const [clockedIn, setClockedIn] = useState(false);
-  const [clockTime, setClockTime] = useState('');
-  const [modal,     setModal]     = useState<'note' | 'photo' | 'issue' | null>(null);
-  const [toast,     setToast]     = useState<{ msg: string; ok: boolean } | null>(null);
-  const [locating,  setLocating]  = useState(false);
+  const [tasks,      setTasks]      = useState<Task[]>([]);
+  const [user,       setUser]       = useState<Profile | null>(null);
+  const [loading,    setLoading]    = useState(true);
+  const [clocking,   setClocking]   = useState(false);
+  const [clockedIn,  setClockedIn]  = useState(false);
+  const [clockTime,  setClockTime]  = useState('');
+  const [gps,        setGps]        = useState<{ lat:number; lng:number } | null>(null);
+  const [gpsStatus,  setGpsStatus]  = useState<'idle'|'active'|'denied'>('idle');
+  const [modal,      setModal]      = useState<'note'|'photo'|'issue'|null>(null);
+  const [toast,      setToast]      = useState<{ msg:string; ok:boolean } | null>(null);
+  const [locating,   setLocating]   = useState(false);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+
+  const watchRef   = useRef<number | null>(null);
+  const userRef    = useRef<Profile | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const showToast = (msg: string, ok = true) => {
     setToast({ msg, ok }); setTimeout(() => setToast(null), 3500);
@@ -135,65 +111,129 @@ export default function WorkerDashboard() {
   const load = async () => {
     setLoading(true);
     const u = await fetchCurrentUser();
-    setUser(u);
+    setUser(u); userRef.current = u;
     if (u) {
       const [myTasks, todayEntry] = await Promise.all([
-        fetchWorkerTasks(u.id),
-        fetchTodayEntry(u.id),
+        fetchWorkerTasks(u.id), fetchTodayEntry(u.id),
       ]);
       setTasks(myTasks);
+      const active = myTasks.find((t: Task) =>
+        ['Assigned','Accepted','In Transit'].includes(t.status)
+      ) || null;
+      setActiveTask(active);
+
       // Restore clock-in state from DB
       if (todayEntry?.clock_in && !todayEntry?.clock_out) {
         setClockedIn(true);
-        setClockTime(todayEntry.clock_in.slice(0, 5));
+        setClockTime(todayEntry.clock_in.slice(0,5));
+        // If was clocked in + has active task, restart GPS tracking
+        if (active) startTracking();
       }
-      setActiveTask(myTasks.find((t: Task) =>
-        ['Assigned','Accepted','In Transit'].includes(t.status)
-      ) || null);
     }
     setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
 
-  // ── Clock In / Out with GPS ──
+  // ── GPS watch: auto-update location every ~60s while clocked in ──
+  const startTracking = () => {
+    if (!navigator.geolocation) return;
+    setGpsStatus('active');
+
+    // watchPosition: fires on every significant movement
+    watchRef.current = navigator.geolocation.watchPosition(
+      pos => {
+        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setGps(loc);
+        if (userRef.current) {
+          updateWorkerLocation(userRef.current.id, loc.lat, loc.lng);
+        }
+      },
+      err => {
+        if (err.code === 1) setGpsStatus('denied');
+        console.warn('GPS error:', err.message);
+      },
+      { enableHighAccuracy: true, maximumAge: 30_000, timeout: 15_000 }
+    );
+
+    // Also force-update every 60s (in case device is stationary)
+    intervalRef.current = setInterval(() => {
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          setGps(loc);
+          if (userRef.current) {
+            updateWorkerLocation(userRef.current.id, loc.lat, loc.lng);
+          }
+        },
+        () => {},
+        { enableHighAccuracy: true, timeout: 10_000 }
+      );
+    }, 60_000);
+  };
+
+  const stopTracking = () => {
+    if (watchRef.current !== null) {
+      navigator.geolocation.clearWatch(watchRef.current);
+      watchRef.current = null;
+    }
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    setGpsStatus('idle');
+  };
+
+  useEffect(() => () => stopTracking(), []);
+
+  // ── Clock In / Out ──
   const handleClock = async () => {
     if (!user) return;
     setClocking(true);
-    try {
-      // Require GPS for clock-in
-      const loc = await requestGPS().catch(() => null);
-      if (!clockedIn && !loc) {
-        showToast('Please allow location access to clock in.', false);
-        setClocking(false); return;
-      }
 
-      if (!clockedIn) {
+    if (!clockedIn) {
+      // Request GPS first
+      try {
+        const loc = await new Promise<{ lat:number; lng:number }>((res, rej) =>
+          navigator.geolocation.getCurrentPosition(
+            p => res({ lat: p.coords.latitude, lng: p.coords.longitude }),
+            rej, { enableHighAccuracy: true, timeout: 10_000 }
+          )
+        );
         await clockIn(user.id);
-        if (loc) await updateWorkerLocation(user.id, loc.lat, loc.lng);
-        const now = new Date().toLocaleTimeString('en-CA', { hour:'2-digit', minute:'2-digit' });
+        await updateWorkerLocation(user.id, loc.lat, loc.lng);
+        setGps(loc);
+        const now = new Date().toLocaleTimeString('en-CA',{ hour:'2-digit', minute:'2-digit' });
         setClockTime(now); setClockedIn(true);
-        showToast('Clocked in · GPS location recorded.');
-      } else {
-        await clockOut(user.id);
-        if (loc) await updateWorkerLocation(user.id, loc.lat, loc.lng);
-        setClockedIn(false); setClockTime('');
-        showToast('Clocked out successfully.');
+        startTracking();
+        showToast('Clocked in · GPS tracking started.');
+      } catch {
+        setGpsStatus('denied');
+        showToast('Please allow location access to clock in.', false);
       }
-    } catch {
-      showToast('Action failed. Please try again.', false);
+    } else {
+      await clockOut(user.id);
+      stopTracking();
+      setClockedIn(false); setClockTime(''); setGps(null);
+      showToast('Clocked out. GPS tracking stopped.');
     }
     setClocking(false);
   };
 
-  // ── Update Location ──
+  // ── Manual location update ──
   const handleUpdateLocation = async () => {
     if (!user) return;
     setLocating(true);
     try {
-      const loc = await requestGPS();
+      const loc = await new Promise<{ lat:number; lng:number }>((res, rej) =>
+        navigator.geolocation.getCurrentPosition(
+          p => res({ lat: p.coords.latitude, lng: p.coords.longitude }),
+          rej, { enableHighAccuracy: true, timeout: 10_000 }
+        )
+      );
       await updateWorkerLocation(user.id, loc.lat, loc.lng);
-      showToast('Location updated successfully.');
+      setGps(loc);
+      showToast('Location updated.');
     } catch {
       showToast('Could not get GPS. Please allow location access.', false);
     }
@@ -203,24 +243,17 @@ export default function WorkerDashboard() {
   // ── Note / Photo / Issue submit ──
   const handleActionSubmit = async (text: string, file?: File) => {
     if (!user || !activeTask) {
-      showToast('No active task to attach this to.', false); return;
+      showToast('Select an active task first.', false); return;
     }
     let photo_url: string | undefined;
-    if (file) {
-      const { uploadTaskPhoto: upload } = await import('@/lib/api');
-      photo_url = upload ? await upload(file, activeTask.id, user.id) || undefined : undefined;
-    }
+    if (file) photo_url = await uploadTaskPhoto(file, activeTask.id, user.id) || undefined;
     await addTaskUpdate({
-      task_id:   activeTask.id,
-      worker_id: user.id,
-      type:      modal as any,
-      content:   text || undefined,
-      photo_url,
+      task_id: activeTask.id, worker_id: user.id,
+      type: modal as any, content: text || undefined, photo_url,
     });
     showToast(
-      modal === 'note'  ? 'Note added to task.'   :
-      modal === 'photo' ? 'Photo uploaded.'        :
-      'Issue reported to supervisor.'
+      modal === 'note'  ? 'Note added.' :
+      modal === 'photo' ? 'Photo uploaded.' : 'Issue reported.'
     );
   };
 
@@ -232,14 +265,14 @@ export default function WorkerDashboard() {
 
         {/* GPS denied warning */}
         <AnimatePresence>
-          {denied && (
+          {gpsStatus === 'denied' && (
             <motion.div initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }}
               className="flex items-center gap-3 bg-warn/10 border border-warn/30 rounded-xl px-4 py-3">
               <Navigation className="w-4 h-4 text-warn shrink-0" />
               <div>
                 <p className="text-[12px] font-bold text-warn">Location access denied</p>
                 <p className="text-[11px] text-amber-700 mt-0.5">
-                  Enable location in your browser settings to clock in and use GPS features.
+                  Enable location in your browser/device settings to clock in and use GPS features.
                 </p>
               </div>
             </motion.div>
@@ -249,24 +282,41 @@ export default function WorkerDashboard() {
         {/* ── Clock card ── */}
         <motion.div initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }}
           className="rounded-xl bg-navy p-5 relative overflow-hidden">
-          <div className="absolute top-[-60px] right-[-60px] w-48 h-48 rounded-full border border-white/5" />
+          <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full border border-white/5" />
           <div className="relative">
-            <p className="text-slate-400 text-[11px] font-semibold uppercase tracking-wider mb-1">
-              {new Date().toLocaleDateString('en-CA', { weekday:'long', month:'long', day:'numeric' })}
-            </p>
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-slate-400 text-[11px] font-semibold uppercase tracking-wider">
+                {new Date().toLocaleDateString('en-CA',{ weekday:'long', month:'long', day:'numeric' })}
+              </p>
+              {/* GPS indicator */}
+              <div className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full ${
+                gpsStatus === 'active' ? 'bg-pass/20 text-green-300' : 'bg-white/10 text-slate-500'
+              }`}>
+                <Signal className={`w-3 h-3 ${gpsStatus === 'active' ? 'animate-pulse' : ''}`} />
+                {gpsStatus === 'active' ? 'GPS Active' : 'GPS Off'}
+              </div>
+            </div>
+
             <p className="text-white text-4xl font-black tracking-tight leading-none mb-2">
               {clockedIn ? clockTime : '—'}
             </p>
+
+            {/* GPS coords */}
+            {gps && (
+              <p className="text-white/30 text-[10px] font-mono mb-1">
+                {gps.lat.toFixed(5)}, {gps.lng.toFixed(5)}
+              </p>
+            )}
+
             <div className="flex items-center gap-2 mb-5">
               <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full ${
                 clockedIn ? 'bg-pass/20 text-green-300' : 'bg-white/10 text-slate-400'
               }`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${clockedIn ? 'bg-green-400 animate-pulse' : 'bg-slate-500'}`} />
-                {clockedIn
-                  ? `Clocked in${gps ? ' · GPS active' : ''}`
-                  : 'Not clocked in'}
+                {clockedIn ? 'Clocked in · Auto-tracking on' : 'Not clocked in'}
               </span>
             </div>
+
             <motion.button whileTap={{ scale:0.97 }} onClick={handleClock}
               disabled={clocking || loading}
               className={`inline-flex items-center gap-2 font-semibold text-[13px] px-5 py-2.5 rounded-lg text-white transition-all disabled:opacity-60 ${
@@ -279,7 +329,7 @@ export default function WorkerDashboard() {
           </div>
         </motion.div>
 
-        {/* ── Active task banner ── */}
+        {/* Active task banner */}
         <AnimatePresence>
           {activeTask && clockedIn && (
             <motion.div initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }}
@@ -296,22 +346,22 @@ export default function WorkerDashboard() {
           )}
         </AnimatePresence>
 
-        {/* ── Quick actions ── */}
+        {/* Quick actions */}
         {clockedIn && (
           <div>
             <p className="sec-title mb-2">Quick Actions</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {[
                 { icon: locating ? Loader2 : MapPin, label:'Update Location', color:'text-sky',  bg:'bg-sky/10',  action: handleUpdateLocation, spin: locating },
-                { icon: Camera,    label:'Upload Photo',    color:'text-warn', bg:'bg-warn/10', action: () => setModal('photo') },
-                { icon: FileText,  label:'Add Note',        color:'text-pass', bg:'bg-pass/10', action: () => setModal('note')  },
-                { icon: AlertCircle,label:'Report Issue',   color:'text-fail', bg:'bg-fail/10', action: () => setModal('issue') },
-              ].map(({ icon: Icon, label, color, bg, action, spin }, i) => (
+                { icon: Camera,      label:'Upload Photo',   color:'text-warn', bg:'bg-warn/10', action: () => setModal('photo') },
+                { icon: FileText,    label:'Add Note',       color:'text-pass', bg:'bg-pass/10', action: () => setModal('note') },
+                { icon: AlertCircle, label:'Report Issue',   color:'text-fail', bg:'bg-fail/10', action: () => setModal('issue') },
+              ].map(({ icon:Icon, label, color, bg, action, spin }, i) => (
                 <motion.button key={i} whileTap={{ scale:0.97 }}
                   initial={{ opacity:0, y:5 }} animate={{ opacity:1, y:0 }}
                   transition={{ delay: i * 0.05 }}
                   onClick={action}
-                  className="card-sm flex items-center gap-2.5 text-left hover:shadow-md transition-shadow active:scale-[0.98]">
+                  className="card-sm flex items-center gap-2.5 text-left hover:shadow-md transition-shadow">
                   <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center shrink-0`}>
                     <Icon className={`w-4 h-4 ${color} ${spin ? 'animate-spin' : ''}`} />
                   </div>
@@ -320,14 +370,14 @@ export default function WorkerDashboard() {
               ))}
             </div>
             {!activeTask && (
-              <p className="text-[11px] text-text-muted mt-2 text-center">
-                Note: select an active task first to attach photos/notes to it.
+              <p className="text-[11px] text-text-muted mt-2 px-1">
+                Tap a task below to make it active — photos and notes will attach to it.
               </p>
             )}
           </div>
         )}
 
-        {/* ── My Tasks ── */}
+        {/* My Tasks */}
         <div>
           <div className="sec-hd">
             <h2 className="sec-title">My Tasks</h2>
@@ -335,9 +385,7 @@ export default function WorkerDashboard() {
           </div>
           <div className="card !p-0 overflow-hidden">
             {loading ? (
-              <div className="p-3 space-y-2">
-                {[1,2,3].map(i => <div key={i} className="skel h-16 rounded-lg" />)}
-              </div>
+              <div className="p-3 space-y-2">{[1,2,3].map(i => <div key={i} className="skel h-16 rounded-lg" />)}</div>
             ) : tasks.length === 0 ? (
               <div className="empty">
                 <div className="empty-icon"><FileText className="w-5 h-5 text-text-muted" /></div>
@@ -355,7 +403,7 @@ export default function WorkerDashboard() {
                       initial={{ opacity:0, y:5 }} animate={{ opacity:1, y:0 }}
                       transition={{ delay: i * 0.05 }}
                       onClick={() => router.push(`/worker/tasks/${task.id}`)}
-                      className="row cursor-pointer group hover:bg-slate-50 active:bg-slate-100 transition-colors">
+                      className="row cursor-pointer group hover:bg-slate-50 transition-colors">
                       <div className="w-9 h-9 rounded-lg shrink-0 flex items-center justify-center"
                         style={{ background: tm.color + '18' }}>
                         <Icon className="w-4 h-4" style={{ color: tm.color }} />
@@ -385,20 +433,16 @@ export default function WorkerDashboard() {
         </div>
       </div>
 
-      {/* Action modals */}
+      {/* Modals */}
       <AnimatePresence>
-        {modal === 'note' && (
-          <ActionModal key="note" title="Add Note" placeholder="Write a note about this task…"
-            onClose={() => setModal(null)} onSubmit={handleActionSubmit} />
-        )}
-        {modal === 'photo' && (
-          <ActionModal key="photo" title="Upload Photo" placeholder="Add a caption (optional)…"
-            isPhoto onClose={() => setModal(null)} onSubmit={handleActionSubmit} />
-        )}
-        {modal === 'issue' && (
-          <ActionModal key="issue" title="Report Issue"
-            placeholder="Describe the issue so your supervisor can act on it…"
-            onClose={() => setModal(null)} onSubmit={handleActionSubmit} />
+        {modal && (
+          <ActionModal key={modal}
+            title={modal === 'note' ? 'Add Note' : modal === 'photo' ? 'Upload Photo' : 'Report Issue'}
+            placeholder={modal === 'note' ? 'Write a note about this task…' : modal === 'photo' ? 'Caption (optional)…' : 'Describe the issue…'}
+            isPhoto={modal === 'photo'}
+            onClose={() => setModal(null)}
+            onSubmit={handleActionSubmit}
+          />
         )}
       </AnimatePresence>
 

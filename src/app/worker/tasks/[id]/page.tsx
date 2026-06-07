@@ -11,7 +11,7 @@ import {
 import AppShell from '@/components/layout/AppShell';
 import Map from '@/components/ui/Map';
 import {
-  fetchTask, updateTaskStatus, fetchCurrentUser,
+  fetchTask, updateTaskStatus, fetchCurrentUser, completeTaskWithLocation,
   addTaskUpdate, uploadTaskPhoto, fetchTaskUpdates,
 } from '@/lib/api';
 import type { Task, Profile } from '@/types';
@@ -74,18 +74,25 @@ export default function TaskDetailPage() {
 
   const handleComplete = async () => {
     if (!task || !user) return;
+    if (!file) { showToast('Please upload a completion photo.', false); return; }
     setActing(true);
-    let photo_url: string | undefined;
-    if (file) {
-      photo_url = await uploadTaskPhoto(file, task.id, user.id) || undefined;
-    }
-    await updateTaskStatus(task.id, 'Completed');
-    await addTaskUpdate({
-      task_id: task.id, worker_id: user.id, type: 'status',
-      content: 'Completed' + (text ? `: ${text}` : ''), photo_url,
-    });
+
+    // Get GPS at the moment of completion
+    let lat: number | null = null;
+    let lng: number | null = null;
+    try {
+      const pos = await new Promise<GeolocationPosition>((res, rej) =>
+        navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 8000 })
+      );
+      lat = pos.coords.latitude;
+      lng = pos.coords.longitude;
+    } catch { /* proceed without GPS */ }
+
+    const photo_url = await uploadTaskPhoto(file, task.id, user.id) || undefined;
+    await completeTaskWithLocation(task.id, user.id, lat, lng, text || undefined, photo_url);
+
     setModal(null); setText(''); setFile(null); setPreview('');
-    showToast('Task marked as complete!');
+    showToast('Task completed! Location logged.');
     load();
     setActing(false);
   };
@@ -270,6 +277,24 @@ export default function TaskDetailPage() {
           <div className="bg-sky/5 border border-sky/20 rounded-xl p-4">
             <p className="text-[10px] font-bold text-sky uppercase tracking-wide mb-1.5">Supervisor Notes</p>
             <p className="text-[13px] text-text-secondary leading-relaxed">{task.supervisor_notes}</p>
+          </div>
+        )}
+
+        {/* Completion location map */}
+        {(task as any).completion_lat && (task as any).completion_lng && (
+          <div className="card">
+            <p className="sec-title mb-3 flex items-center gap-1.5">
+              <CheckCircle className="w-3.5 h-3.5 text-pass" />
+              Completion Location
+            </p>
+            {(task as any).completion_address && (
+              <p className="text-[12px] text-text-muted mb-3 flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 shrink-0" />
+                {(task as any).completion_address}
+              </p>
+            )}
+            <Map lat={(task as any).completion_lat} lng={(task as any).completion_lng}
+              label="Task completed here" height={180} />
           </div>
         )}
 
