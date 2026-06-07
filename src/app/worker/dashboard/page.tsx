@@ -9,6 +9,7 @@ import {
   CheckCircle, X, Navigation, Signal,
 } from 'lucide-react';
 import AppShell from '@/components/layout/AppShell';
+import { supabase } from '@/lib/supabase';
 import {
   fetchWorkerTasks, clockIn, clockOut, fetchCurrentUser,
   fetchTodayEntry, updateWorkerLocation, addTaskUpdate, uploadTaskPhoto, saveLocationPoint,
@@ -135,7 +136,17 @@ export default function WorkerDashboard() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  // Wait for Supabase session to be ready before loading
+  useEffect(() => {
+    // Try immediately (works if session already in cache)
+    load();
+    // Also listen for auth state — catches the case where session
+    // restores asynchronously after a hard reload
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') load();
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   // ── GPS watch: auto-update location every ~60s while clocked in ──
   const startTracking = () => {
@@ -331,7 +342,7 @@ export default function WorkerDashboard() {
               }`}>
               {clocking ? <Loader2 className="w-4 h-4 animate-spin" />
                 : clockedIn ? <><LogOut className="w-4 h-4" />Clock Out</>
-                : <><LogIn className="w-4 h-4" />Clock In — GPS Required</>}
+                : <><LogIn className="w-4 h-4" />Clock In</>}
             </motion.button>
           </div>
         </motion.div>

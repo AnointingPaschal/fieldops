@@ -167,9 +167,10 @@ export async function clockOut(workerId: string) {
 }
 
 export async function fetchCurrentUser(): Promise<Profile | null> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-  const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+  // getSession reads from local cache (no network) — safe on page reload
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) return null;
+  const { data } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
   return data;
 }
 
