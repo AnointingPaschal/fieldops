@@ -40,7 +40,7 @@ export default function LoginPage() {
         });
 
       if (authError) {
-        setError(authError.message);
+        setError(JSON.stringify(authError, null, 2));
         setLoading(false);
         return;
       }
@@ -172,10 +172,13 @@ export default function LoginPage() {
             <motion.div
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex items-start gap-2.5 text-fail text-[12px] bg-red-50 border border-red-200 rounded-lg p-3 mb-4"
+              className="text-fail text-[11px] bg-red-50 border border-red-200 rounded-lg p-3 mb-4"
             >
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-              <span>{error}</span>
+              <div className="flex items-center gap-2 font-bold mb-1">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>Auth Error</span>
+              </div>
+              <pre className="whitespace-pre-wrap break-all font-mono text-[10px] text-red-700">{error}</pre>
             </motion.div>
           )}
 
