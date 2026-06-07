@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import NavigationProgress from '@/components/ui/NavigationProgress';
 
 export const metadata: Metadata = {
   title: 'FieldOps — Alberta Safety Control',
@@ -12,7 +13,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
       </head>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <NavigationProgress />
+        {children}
+      </body>
     </html>
   );
 }

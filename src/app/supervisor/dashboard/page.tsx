@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { triggerNav } from '@/lib/navigation';
 import { motion } from 'framer-motion';
 import {
   Zap, Truck, Users, AlertTriangle, Plus, ChevronRight,
@@ -89,7 +90,7 @@ export default function SupervisorDashboard() {
               { label:'Reports',   sub:'Weekly reports',      href:'/supervisor/history'                     },
             ].map(({ label, sub, href, primary }, i) => (
               <motion.button key={i} variants={item}
-                onClick={() => router.push(href)}
+                onClick={() => { triggerNav(); router.push(href); }}
                 className={`flex items-center justify-between p-3.5 rounded-xl border text-left transition-all hover:shadow-sm active:scale-[0.98] ${
                   primary ? 'bg-navy border-navy text-white' : 'bg-white border-line hover:border-slate-300'
                 }`}>
@@ -141,7 +142,7 @@ export default function SupervisorDashboard() {
                     return (
                       <motion.div key={task.id} variants={item}
                         className="row cursor-pointer"
-                        onClick={() => router.push(`/supervisor/tasks/${task.id}`)}>
+                        onClick={() => { triggerNav(); router.push(`/supervisor/tasks/${task.id}`); }}>
                         <div className="w-9 h-9 rounded-lg shrink-0 flex items-center justify-center"
                           style={{ background: tm.color + '18' }}>
                           <Icon className="w-4 h-4" style={{ color: tm.color }} />
@@ -175,7 +176,7 @@ export default function SupervisorDashboard() {
           <div>
             <div className="sec-hd">
               <h2 className="sec-title">Inventory</h2>
-              <button onClick={() => router.push('/supervisor/inventory')} className="link-sm">View all</button>
+              <button onClick={() => { triggerNav(); router.push('/supervisor/inventory'); }} className="link-sm">View all</button>
             </div>
             <div className="card !p-0 overflow-hidden">
               {loading ? (

@@ -9,6 +9,7 @@ import {
   ClipboardList,
 } from 'lucide-react';
 import type { Role } from '@/types';
+import { triggerNav } from '@/lib/navigation';
 
 // ── Sidebar nav (full, desktop only) ─────────────────────────
 const SUP_SIDEBAR = [
@@ -66,7 +67,7 @@ export default function AppShell({
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
     await sb.auth.signOut();
-    router.push('/');
+    triggerNav(); router.push('/');
   };
 
   return (
@@ -104,7 +105,7 @@ export default function AppShell({
           {sidebarNav.map(({ href, label, icon: Icon }) => {
             const on = isActive(href, pathname);
             return (
-              <button key={href} onClick={() => router.push(href)}
+              <button key={href} onClick={() => { triggerNav(); router.push(href); }}
                 className={`nav-item w-full text-left ${on ? 'on' : ''}`}>
                 <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
                   on ? 'bg-white/20' : 'bg-navy-light'
@@ -177,7 +178,7 @@ export default function AppShell({
               <LogOut className="w-4 h-4 text-text-secondary" />
             </button>
             {role === 'supervisor' && (
-              <button onClick={() => router.push('/supervisor/create-task')}
+              <button onClick={() => { triggerNav(); router.push('/supervisor/create-task'); }}
                 className="btn-navy hidden md:flex text-[13px]">
                 <Plus className="w-3.5 h-3.5" /> New Task
               </button>
@@ -196,7 +197,7 @@ export default function AppShell({
         {bottomNav.map(({ href, label, icon: Icon }) => {
           const on = isActive(href, pathname);
           return (
-            <button key={href} onClick={() => router.push(href)}
+            <button key={href} onClick={() => { triggerNav(); router.push(href); }}
               className={`bnav-item ${on ? 'on' : ''}`}>
               <Icon className="w-5 h-5" strokeWidth={on ? 2.5 : 1.8} />
               <span className="text-[10px] font-semibold">{label}</span>

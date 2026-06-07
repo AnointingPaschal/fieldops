@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { triggerNav } from '@/lib/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LogIn, LogOut, MapPin, Camera, FileText, AlertCircle,
@@ -10,7 +11,7 @@ import {
 import AppShell from '@/components/layout/AppShell';
 import {
   fetchWorkerTasks, clockIn, clockOut, fetchCurrentUser,
-  fetchTodayEntry, updateWorkerLocation, addTaskUpdate, uploadTaskPhoto,
+  fetchTodayEntry, updateWorkerLocation, addTaskUpdate, uploadTaskPhoto, saveLocationPoint,
 } from '@/lib/api';
 import type { Task, Profile } from '@/types';
 import { STATUS_META, TYPE_META } from '@/types';
@@ -100,7 +101,8 @@ export default function WorkerDashboard() {
   const [locating,   setLocating]   = useState(false);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
 
-  const watchRef   = useRef<number | null>(null);
+  const watchRef    = useRef<number | null>(null);
+  const activeTaskRef = useRef<Task | null>(null);
   const userRef    = useRef<Profile | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -120,7 +122,7 @@ export default function WorkerDashboard() {
       const active = myTasks.find((t: Task) =>
         ['Assigned','Accepted','In Transit'].includes(t.status)
       ) || null;
-      setActiveTask(active);
+      setActiveTask(active); activeTaskRef.current = active;
 
       // Restore clock-in state from DB
       if (todayEntry?.clock_in && !todayEntry?.clock_out) {
@@ -147,6 +149,9 @@ export default function WorkerDashboard() {
         setGps(loc);
         if (userRef.current) {
           updateWorkerLocation(userRef.current.id, loc.lat, loc.lng);
+          // Save to route history for track playback
+          const taskId = activeTaskRef.current?.id || null;
+          saveLocationPoint(userRef.current.id, loc.lat, loc.lng, taskId);
         }
       },
       err => {
@@ -164,6 +169,8 @@ export default function WorkerDashboard() {
           setGps(loc);
           if (userRef.current) {
             updateWorkerLocation(userRef.current.id, loc.lat, loc.lng);
+            const taskId = activeTaskRef.current?.id || null;
+            saveLocationPoint(userRef.current.id, loc.lat, loc.lng, taskId);
           }
         },
         () => {},
@@ -333,7 +340,7 @@ export default function WorkerDashboard() {
         <AnimatePresence>
           {activeTask && clockedIn && (
             <motion.div initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }}
-              onClick={() => router.push(`/worker/tasks/${activeTask.id}`)}
+              onClick={() => { triggerNav(); router.push(`/worker/tasks/${activeTask.id}`); }}
               className="flex items-center gap-3 bg-sky/10 border border-sky/25 rounded-xl px-4 py-3.5 cursor-pointer hover:bg-sky/15 transition-colors">
               <div className="w-2.5 h-2.5 rounded-full bg-sky animate-pulse shrink-0" />
               <div className="flex-1 min-w-0">
@@ -402,7 +409,7 @@ export default function WorkerDashboard() {
                     <motion.div key={task.id}
                       initial={{ opacity:0, y:5 }} animate={{ opacity:1, y:0 }}
                       transition={{ delay: i * 0.05 }}
-                      onClick={() => router.push(`/worker/tasks/${task.id}`)}
+                      onClick={() => { triggerNav(); router.push(`/worker/tasks/${task.id}`); }}
                       className="row cursor-pointer group hover:bg-slate-50 transition-colors">
                       <div className="w-9 h-9 rounded-lg shrink-0 flex items-center justify-center"
                         style={{ background: tm.color + '18' }}>

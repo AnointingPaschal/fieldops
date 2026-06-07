@@ -318,3 +318,33 @@ export async function fetchWorkersWithLocations() {
       .find((t: any) => t && !['Completed','Cancelled'].includes(t.status)) || null,
   }));
 }
+
+// ─── Location history (route tracking) ───────────────────────
+export async function saveLocationPoint(
+  workerId: string, lat: number, lng: number, taskId?: string | null
+) {
+  return supabase.from('location_history').insert({
+    worker_id: workerId, lat, lng,
+    task_id: taskId || null,
+  });
+}
+
+export async function fetchWorkerRoute(workerId: string, since?: string) {
+  const q = supabase
+    .from('location_history')
+    .select('lat,lng,recorded_at')
+    .eq('worker_id', workerId)
+    .order('recorded_at', { ascending: true });
+  if (since) q.gte('recorded_at', since);
+  const { data } = await q;
+  return (data || []) as { lat: number; lng: number; recorded_at: string }[];
+}
+
+export async function fetchTaskRoute(taskId: string) {
+  const { data } = await supabase
+    .from('location_history')
+    .select('lat,lng,recorded_at,worker_id')
+    .eq('task_id', taskId)
+    .order('recorded_at', { ascending: true });
+  return (data || []) as { lat: number; lng: number; recorded_at: string; worker_id: string }[];
+}

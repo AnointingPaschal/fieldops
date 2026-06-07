@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { triggerNav } from '@/lib/navigation';
 import { motion } from 'framer-motion';
 import {
   Plus, Package, RefreshCw, Wrench, Trash2,
@@ -53,7 +54,7 @@ export default function TasksPage() {
               {loading ? '—' : `${tasks.length} total · ${counts['In Transit'] || 0} in transit`}
             </p>
           </div>
-          <button onClick={() => router.push('/supervisor/create-task')}
+          <button onClick={() => { triggerNav(); router.push('/supervisor/create-task'); }}
             className="btn-navy text-[13px]">
             <Plus className="w-3.5 h-3.5" /> Add Task
           </button>
@@ -92,7 +93,7 @@ export default function TasksPage() {
                 {filter === 'All' ? 'Create your first task to get started' : 'Try a different filter'}
               </p>
               {filter === 'All' && (
-                <button onClick={() => router.push('/supervisor/create-task')}
+                <button onClick={() => { triggerNav(); router.push('/supervisor/create-task'); }}
                   className="btn-navy mt-3 text-[12px]">
                   <Plus className="w-3.5 h-3.5" /> Add Task
                 </button>
@@ -106,7 +107,7 @@ export default function TasksPage() {
                 const Icon = taskIcon[task.type] || Package;
                 return (
                   <motion.div key={task.id} variants={row}
-                    onClick={() => router.push(`/supervisor/tasks/${task.id}`)}
+                    onClick={() => { triggerNav(); router.push(`/supervisor/tasks/${task.id}`); }}
                     className="row cursor-pointer group hover:bg-slate-50 transition-colors"
                     style={{ borderLeft: `3px solid ${tm.color}` }}
                   >
