@@ -3,14 +3,14 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft, Package, RefreshCw, Wrench, Trash2,
+  ArrowLeft, Package, RefreshCw, Wrench, Trash2, AlertTriangle,
   MapPin, Phone, Calendar, Clock, Users, CheckCircle,
   AlertCircle, Loader2, ChevronRight, FileText,
   Image as ImageIcon, User, X, Download,
 } from 'lucide-react';
 import AppShell from '@/components/layout/AppShell';
 import Map from '@/components/ui/Map';
-import { fetchTask, updateTaskStatus, fetchCurrentUser, fetchTaskUpdates } from '@/lib/api';
+import { fetchTask, updateTaskStatus, fetchCurrentUser, fetchTaskUpdates, fetchItemRecovery } from '@/lib/api';
 import type { Task, Profile } from '@/types';
 import { STATUS_META, TYPE_META } from '@/types';
 
@@ -39,6 +39,7 @@ export default function SupervisorTaskDetail() {
   const [acting,  setActing]  = useState(false);
   const [toast,   setToast]   = useState<{ msg:string; ok:boolean } | null>(null);
   const [showCancel, setShowCancel] = useState(false);
+  const [recovery,   setRecovery]   = useState<any[]>([]);
 
   const showToast = (msg: string, ok = true) => {
     setToast({ msg, ok }); setTimeout(() => setToast(null), 3000);
@@ -46,10 +47,10 @@ export default function SupervisorTaskDetail() {
 
   const load = async () => {
     setLoading(true);
-    const [t, u, upd] = await Promise.all([
-      fetchTask(taskId), fetchCurrentUser(), fetchTaskUpdates(taskId),
+    const [t, u, upd, rec] = await Promise.all([
+      fetchTask(taskId), fetchCurrentUser(), fetchTaskUpdates(taskId), fetchItemRecovery(taskId),
     ]);
-    setTask(t); setUser(u); setUpdates(upd);
+    setTask(t); setUser(u); setUpdates(upd); setRecovery(rec);
     setLoading(false);
   };
   useEffect(() => { if (taskId) load(); }, [taskId]);

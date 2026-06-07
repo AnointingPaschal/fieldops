@@ -9,6 +9,7 @@ import {
   ClipboardList, AlertTriangle,
 } from 'lucide-react';
 import type { Role } from '@/types';
+import DiscrepancyFAB from '@/components/ui/DiscrepancyFAB';
 import { triggerNav } from '@/lib/navigation';
 
 // ── Sidebar nav (full, desktop only) ─────────────────────────
@@ -72,6 +73,7 @@ export default function AppShell({
   };
 
   return (
+    <>
     <div className="shell">
 
       {/* ── Sidebar (desktop) ── */}
@@ -235,5 +237,9 @@ export default function AppShell({
         )}
       </AnimatePresence>
     </div>
+
+      {/* Floating discrepancy button — supervisors only */}
+      {role === 'supervisor' && <DiscrepancyFAB />}
+    </>  
   );
 }
