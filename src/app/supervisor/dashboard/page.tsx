@@ -5,7 +5,7 @@ import { triggerNav } from '@/lib/navigation';
 import { motion } from 'framer-motion';
 import {
   Zap, Truck, Users, AlertTriangle, Plus, ChevronRight,
-  Package, Calendar, FileText, RefreshCw, Clock, Loader2,
+  Package, Calendar, FileText, RefreshCw, Clock, Loader2, History,
 } from 'lucide-react';
 import AppShell from '@/components/layout/AppShell';
 import { fetchTasks, fetchInventory, fetchCurrentUser } from '@/lib/api';

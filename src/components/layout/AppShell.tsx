@@ -26,11 +26,11 @@ const SUP_SIDEBAR = [
 
 // ── Bottom nav (mobile only) — key items only ─────────────────
 const SUP_BOTTOM = [
-  { href:'/supervisor/dashboard', label:'Home',     icon:LayoutDashboard },
-  { href:'/supervisor/tasks',     label:'Tasks',    icon:ClipboardList   },
-  { href:'/supervisor/schedule',  label:'Schedule', icon:Calendar        },
-  { href:'/supervisor/live-map',  label:'Live Map', icon:Navigation      },
-  { href:'/supervisor/history',   label:'History',  icon:History         },
+  { href:'/supervisor/dashboard', label:'Home',      icon:LayoutDashboard },
+  { href:'/supervisor/tasks',     label:'Tasks',     icon:ClipboardList   },
+  { href:'/supervisor/schedule',  label:'Schedule',  icon:Calendar        },
+  { href:'/supervisor/live-map',  label:'Live Map',  icon:Navigation      },
+  { href:'/supervisor/inventory', label:'Inventory', icon:Package         },
 ];
 
 const WRK_NAV = [
