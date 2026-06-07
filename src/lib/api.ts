@@ -407,3 +407,11 @@ export async function fetchDiscrepancyTasks() {
     .or('quantity_damaged.gt.0,quantity_missing.gt.0');
   return data || [];
 }
+
+export async function fetchDiscrepancyCount(): Promise<number> {
+  const { count } = await supabase
+    .from('task_item_recovery')
+    .select('*', { count: 'exact', head: true })
+    .or('quantity_damaged.gt.0,quantity_missing.gt.0');
+  return count || 0;
+}

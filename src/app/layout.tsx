@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import NavigationProgress from '@/components/ui/NavigationProgress';
+import DiscrepancyFAB from '@/components/ui/DiscrepancyFAB';
 
 export const metadata: Metadata = {
   title: 'FieldOps — Alberta Safety Control',
@@ -15,6 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="antialiased">
         <NavigationProgress />
+        <DiscrepancyFAB />
         {children}
       </body>
     </html>
