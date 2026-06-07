@@ -28,7 +28,7 @@ const SUP_SIDEBAR = [
 const SUP_BOTTOM = [
   { href:'/supervisor/dashboard', label:'Home',      icon:LayoutDashboard },
   { href:'/supervisor/tasks',     label:'Tasks',     icon:ClipboardList   },
-  { href:'/supervisor/schedule',  label:'Schedule',  icon:Calendar        },
+  { href:'/supervisor/workers',   label:'Workers',   icon:Users           },
   { href:'/supervisor/live-map',  label:'Live Map',  icon:Navigation      },
   { href:'/supervisor/inventory', label:'Inventory', icon:Package         },
 ];
