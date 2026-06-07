@@ -84,10 +84,10 @@ export default function SupervisorDashboard() {
           <motion.div className="grid grid-cols-2 md:grid-cols-4 gap-2"
             variants={list} initial="hidden" animate="visible">
             {[
-              { label:'New Task',  sub:'Create assignment',   href:'/supervisor/create-task', primary:true   },
-              { label:'History',   sub:'Past tasks & reports', href:'/supervisor/history'                    },
-              { label:'Schedule',  sub:'Worker availability', href:'/supervisor/schedule'                    },
-              { label:'Reports',   sub:'Weekly reports',      href:'/supervisor/history'                     },
+              { label:'New Task',    sub:'Create assignment',   href:'/supervisor/create-task', primary:true },
+              { label:'Contractors', sub:'View & manage',        href:'/supervisor/contractors'               },
+              { label:'Schedule',    sub:'Worker availability',  href:'/supervisor/schedule'                  },
+              { label:'History',     sub:'Past tasks & reports', href:'/supervisor/history'                   },
             ].map(({ label, sub, href, primary }, i) => (
               <motion.button key={i} variants={item}
                 onClick={() => { triggerNav(); router.push(href); }}
