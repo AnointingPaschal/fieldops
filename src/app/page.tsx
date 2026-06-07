@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Eye, EyeOff, ArrowRight, Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react';
@@ -9,15 +9,6 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
-
-const PARTICLES = Array.from({ length: 18 }, (_, i) => ({
-  id: i,
-  x: Math.random() * 100,
-  y: Math.random() * 100,
-  size: Math.random() * 3 + 1,
-  duration: Math.random() * 6 + 6,
-  delay: Math.random() * 4,
-}));
 
 export default function LoginPage() {
   const router  = useRouter();
@@ -43,7 +34,7 @@ export default function LoginPage() {
         .from('profiles').select('role').eq('id', authData.user.id).single();
 
       setSuccess(true);
-      await new Promise(r => setTimeout(r, 800));
+      await new Promise(r => setTimeout(r, 700));
       router.push(profile?.role === 'supervisor' ? '/supervisor/dashboard' : '/worker/dashboard');
     } catch (e: any) {
       setError(e?.message || 'Unexpected error.');
@@ -52,163 +43,118 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex overflow-hidden" style={{ background: '#060D1A' }}>
+    <div className="min-h-screen flex flex-col md:flex-row bg-bg">
 
-      {/* ── Animated background particles ── */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        {PARTICLES.map(p => (
-          <motion.div
-            key={p.id}
-            className="absolute rounded-full"
-            style={{
-              left: `${p.x}%`, top: `${p.y}%`,
-              width: p.size, height: p.size,
-              background: 'rgba(29,78,216,0.6)',
-            }}
-            animate={{ y: [0, -40, 0], opacity: [0, 0.8, 0] }}
-            transition={{ duration: p.duration, delay: p.delay, repeat: Infinity, ease: 'easeInOut' }}
-          />
-        ))}
-
-        {/* Glowing orbs */}
-        <motion.div
-          className="absolute rounded-full blur-3xl"
-          style={{ width: 500, height: 500, top: '-10%', left: '-5%', background: 'radial-gradient(circle, rgba(29,78,216,0.15) 0%, transparent 70%)' }}
-          animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] }}
-          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <motion.div
-          className="absolute rounded-full blur-3xl"
-          style={{ width: 400, height: 400, bottom: '-5%', right: '-5%', background: 'radial-gradient(circle, rgba(29,78,216,0.12) 0%, transparent 70%)' }}
-          animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }}
-          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
-        />
-        <motion.div
-          className="absolute rounded-full blur-3xl"
-          style={{ width: 300, height: 300, top: '40%', right: '20%', background: 'radial-gradient(circle, rgba(14,165,233,0.08) 0%, transparent 70%)' }}
-          animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
-          transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 4 }}
-        />
-
-        {/* Grid overlay */}
-        <div className="absolute inset-0 opacity-[0.04]"
-          style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.8) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
-      </div>
-
-      {/* ── Left: Branding ── */}
+      {/* ── Left: Navy panel ── */}
       <motion.div
-        initial={{ opacity: 0, x: -30 }}
+        initial={{ opacity: 0, x: -24 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.6, ease: 'easeOut' }}
-        className="hidden lg:flex w-[52%] flex-col justify-between px-16 py-14 relative"
+        transition={{ duration: 0.45, ease: 'easeOut' }}
+        className="hidden md:flex md:w-[44%] flex-col justify-between px-12 py-14 bg-navy relative overflow-hidden shrink-0"
       >
+        {/* Decorative rings */}
+        <div className="absolute top-[-120px] right-[-120px] w-96 h-96 rounded-full border border-white/5" />
+        <div className="absolute top-[-60px]  right-[-60px]  w-64 h-64 rounded-full border border-white/5" />
+        <div className="absolute bottom-[-100px] left-[-100px] w-80 h-80 rounded-full border border-white/5" />
+
         {/* Logo */}
-        <div className="flex items-center gap-3">
-          <motion.div
-            whileHover={{ rotate: 10, scale: 1.05 }}
-            className="w-10 h-10 rounded-xl bg-sky flex items-center justify-center shadow-lg"
-          >
+        <div className="relative flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-sky flex items-center justify-center shadow-lg shrink-0">
             <Shield className="w-5 h-5 text-white" />
-          </motion.div>
+          </div>
           <div>
-            <p className="font-black text-white text-lg leading-none tracking-tight">FieldOps</p>
-            <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-0.5">Alberta Safety Control</p>
+            <p className="font-black text-white text-[17px] leading-none tracking-tight">FieldOps</p>
+            <p className="text-[9px] text-slate-500 uppercase tracking-widest mt-0.5">Alberta Safety Control</p>
           </div>
         </div>
 
-        {/* Center content */}
-        <div className="max-w-lg">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.6 }}
-          >
-            <p className="text-sky text-sm font-semibold uppercase tracking-widest mb-4">
-              Field Operations Platform
-            </p>
-            <h1 className="text-5xl font-black text-white leading-tight tracking-tight mb-6">
-              Manage your<br />
-              <span className="text-transparent bg-clip-text"
-                style={{ backgroundImage: 'linear-gradient(135deg, #3B82F6, #60A5FA)' }}>
-                field operations
-              </span><br />
-              in real time.
-            </h1>
-            <p className="text-slate-400 text-base leading-relaxed mb-10">
-              Assign tasks, track inventory, manage worker schedules and
-              automate timesheets — all from one platform.
-            </p>
-          </motion.div>
+        {/* Hero text */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25, duration: 0.5 }}
+          className="relative"
+        >
+          <p className="text-sky text-[11px] font-bold uppercase tracking-widest mb-4">
+            Field Operations Platform
+          </p>
+          <h1 className="text-4xl font-black text-white leading-tight tracking-tight mb-5">
+            Run your field<br />operations with<br />
+            <span className="text-sky">precision.</span>
+          </h1>
+          <p className="text-slate-400 text-sm leading-relaxed mb-10">
+            Assign tasks, track inventory, manage worker schedules
+            and automate timesheets — all from one platform.
+          </p>
 
-          {/* Feature list */}
           <div className="space-y-3">
             {[
               'Real-time task assignment & tracking',
-              'Live inventory management with stock alerts',
-              'Worker scheduling & availability control',
-              'Automated weekly timesheet reports',
+              'Live inventory with low-stock alerts',
+              'Worker scheduling & availability',
               'Clock in / out with GPS verification',
+              'Automated weekly timesheet PDF reports',
             ].map((f, i) => (
               <motion.div key={i}
-                initial={{ opacity: 0, x: -16 }}
+                initial={{ opacity: 0, x: -12 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 + i * 0.08, duration: 0.4 }}
+                transition={{ delay: 0.4 + i * 0.07, duration: 0.35 }}
                 className="flex items-center gap-3"
               >
-                <div className="w-5 h-5 rounded-full bg-sky/20 border border-sky/40 flex items-center justify-center shrink-0">
-                  <div className="w-1.5 h-1.5 rounded-full bg-sky" />
-                </div>
+                <div className="w-1.5 h-1.5 rounded-full bg-sky shrink-0" />
                 <p className="text-[13px] text-slate-400">{f}</p>
               </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
-        {/* Bottom */}
-        <p className="text-[11px] text-slate-600">
-          © 2026 Alberta Safety Control · Confidential
+        {/* Footer */}
+        <p className="relative text-[11px] text-slate-600">
+          © 2026 Alberta Safety Control · All rights reserved
         </p>
       </motion.div>
 
-      {/* ── Right: Form ── */}
-      <div className="flex-1 flex items-center justify-center px-5 py-10 relative">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.15, ease: 'easeOut' }}
-          className="w-full max-w-sm"
-        >
+      {/* ── Right: Form panel ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1, ease: 'easeOut' }}
+        className="flex-1 flex items-center justify-center px-5 py-12"
+      >
+        <div className="w-full max-w-sm">
+
           {/* Mobile logo */}
-          <div className="lg:hidden flex items-center gap-3 mb-10">
-            <div className="w-9 h-9 rounded-xl bg-sky flex items-center justify-center">
+          <div className="md:hidden flex items-center gap-3 mb-10">
+            <div className="w-9 h-9 rounded-xl bg-navy flex items-center justify-center">
               <Shield className="w-5 h-5 text-white" />
             </div>
-            <p className="font-black text-white text-lg">FieldOps</p>
+            <p className="font-black text-navy text-lg tracking-tight">FieldOps</p>
           </div>
 
-          {/* Card */}
-          <div className="rounded-2xl p-8 relative overflow-hidden"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}>
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <h2 className="text-2xl font-black text-text-primary tracking-tight mb-1">Welcome back</h2>
+            <p className="text-text-muted text-sm mb-8">Sign in to your account to continue</p>
+          </motion.div>
 
-            {/* Card inner glow */}
-            <div className="absolute top-0 left-0 right-0 h-px"
-              style={{ background: 'linear-gradient(90deg, transparent, rgba(59,130,246,0.5), transparent)' }} />
-
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-              <h2 className="text-2xl font-black text-white mb-1 tracking-tight">Welcome back</h2>
-              <p className="text-slate-500 text-sm mb-8">Sign in to your account</p>
-            </motion.div>
-
+          {/* Form card */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="bg-white rounded-2xl border border-line shadow-card p-6 space-y-4"
+          >
             {/* Email */}
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
-              className="mb-4">
-              <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                Email Address
-              </label>
-              <div className={`relative flex items-center rounded-xl border transition-all duration-200 ${
-                focused === 'email' ? 'border-sky/60 shadow-[0_0_0_3px_rgba(29,78,216,0.1)]' : 'border-white/10'
-              }`} style={{ background: 'rgba(255,255,255,0.06)' }}>
-                <Mail className="absolute left-3.5 w-4 h-4 text-slate-500" />
+            <div>
+              <label className="label">Email Address</label>
+              <motion.div
+                animate={{ boxShadow: focused === 'email' ? '0 0 0 3px rgba(29,78,216,0.12)' : '0 0 0 0px transparent' }}
+                className="relative rounded-xl overflow-hidden"
+              >
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
                 <input
                   type="email"
                   placeholder="you@company.com"
@@ -218,21 +164,19 @@ export default function LoginPage() {
                   onBlur={() => setFocused(null)}
                   onKeyDown={e => e.key === 'Enter' && signIn()}
                   autoComplete="email"
-                  className="w-full bg-transparent pl-10 pr-4 py-3 text-white text-sm placeholder-slate-600 focus:outline-none"
+                  className="input pl-10"
                 />
-              </div>
-            </motion.div>
+              </motion.div>
+            </div>
 
             {/* Password */}
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-              className="mb-3">
-              <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                Password
-              </label>
-              <div className={`relative flex items-center rounded-xl border transition-all duration-200 ${
-                focused === 'pw' ? 'border-sky/60 shadow-[0_0_0_3px_rgba(29,78,216,0.1)]' : 'border-white/10'
-              }`} style={{ background: 'rgba(255,255,255,0.06)' }}>
-                <Lock className="absolute left-3.5 w-4 h-4 text-slate-500" />
+            <div>
+              <label className="label">Password</label>
+              <motion.div
+                animate={{ boxShadow: focused === 'pw' ? '0 0 0 3px rgba(29,78,216,0.12)' : '0 0 0 0px transparent' }}
+                className="relative rounded-xl overflow-hidden"
+              >
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
                 <input
                   type={showPw ? 'text' : 'password'}
                   placeholder="••••••••"
@@ -242,34 +186,33 @@ export default function LoginPage() {
                   onBlur={() => setFocused(null)}
                   onKeyDown={e => e.key === 'Enter' && signIn()}
                   autoComplete="current-password"
-                  className="w-full bg-transparent pl-10 pr-11 py-3 text-white text-sm placeholder-slate-600 focus:outline-none"
+                  className="input pl-10 pr-11"
                 />
-                <button onClick={() => setShowPw(s => !s)}
-                  className="absolute right-3.5 text-slate-500 hover:text-slate-300 transition-colors">
+                <button
+                  onClick={() => setShowPw(s => !s)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors"
+                >
                   {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
-              </div>
-            </motion.div>
+              </motion.div>
+            </div>
 
-            {/* Forgot */}
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45 }}
-              className="flex justify-end mb-6">
-              <button className="text-[12px] text-slate-500 hover:text-sky transition-colors">
+            <div className="flex justify-end">
+              <button className="text-[12px] text-sky font-semibold hover:underline">
                 Forgot password?
               </button>
-            </motion.div>
+            </div>
 
             {/* Error */}
             <AnimatePresence>
               {error && (
                 <motion.div
-                  initial={{ opacity: 0, y: -6, height: 0 }}
+                  initial={{ opacity: 0, y: -4, height: 0 }}
                   animate={{ opacity: 1, y: 0, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="mb-4 overflow-hidden"
+                  className="overflow-hidden"
                 >
-                  <div className="flex items-center gap-2.5 text-red-400 text-[12px] rounded-xl px-3.5 py-3"
-                    style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                  <div className="flex items-center gap-2 text-fail text-[12px] bg-red-50 border border-red-200 rounded-xl px-3.5 py-3">
                     <AlertCircle className="w-4 h-4 shrink-0" />
                     {error}
                   </div>
@@ -277,51 +220,38 @@ export default function LoginPage() {
               )}
             </AnimatePresence>
 
-            {/* Submit button */}
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
-              <AnimatePresence mode="wait">
-                {success ? (
-                  <motion.div key="success"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="w-full py-3.5 rounded-xl flex items-center justify-center gap-2 font-bold text-white"
-                    style={{ background: 'linear-gradient(135deg, #16A34A, #15803D)' }}>
-                    <CheckCircle className="w-4 h-4" />
-                    Redirecting…
-                  </motion.div>
-                ) : (
-                  <motion.button key="signin"
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={signIn}
-                    disabled={loading}
-                    className="w-full py-3.5 rounded-xl flex items-center justify-center gap-2 font-bold text-white text-[15px] disabled:opacity-60 transition-all relative overflow-hidden"
-                    style={{ background: 'linear-gradient(135deg, #1D4ED8, #2563EB)' }}
-                  >
-                    {/* Button shimmer */}
-                    <motion.div
-                      className="absolute inset-0 -skew-x-12"
-                      style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)' }}
-                      animate={{ x: ['-100%', '200%'] }}
-                      transition={{ duration: 2.5, repeat: Infinity, ease: 'linear', repeatDelay: 1 }}
-                    />
-                    {loading ? (
-                      <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    ) : (
-                      <><span>Sign In</span><ArrowRight className="w-4 h-4" /></>
-                    )}
-                  </motion.button>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          </div>
+            {/* Button */}
+            <AnimatePresence mode="wait">
+              {success ? (
+                <motion.div key="success"
+                  initial={{ opacity: 0, scale: 0.97 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="w-full py-3 rounded-xl flex items-center justify-center gap-2 font-bold text-white text-[15px] bg-pass"
+                >
+                  <CheckCircle className="w-4 h-4" /> Redirecting…
+                </motion.div>
+              ) : (
+                <motion.button key="signin"
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={signIn}
+                  disabled={loading}
+                  className="btn btn-navy btn-full disabled:opacity-50 text-[15px]"
+                >
+                  {loading
+                    ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    : <><span>Sign In</span><ArrowRight className="w-4 h-4" /></>}
+                </motion.button>
+              )}
+            </AnimatePresence>
+          </motion.div>
 
-          <p className="text-center text-[11px] text-slate-600 mt-6">
+          <p className="text-center text-[11px] text-text-muted mt-5">
             Don&apos;t have an account?{' '}
-            <span className="text-slate-400 font-semibold">Contact your administrator</span>
+            <span className="text-navy font-semibold">Contact your administrator</span>
           </p>
-        </motion.div>
-      </div>
+        </div>
+      </motion.div>
     </div>
   );
 }
