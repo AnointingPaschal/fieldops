@@ -172,3 +172,19 @@ export async function fetchCurrentUser(): Promise<Profile | null> {
   const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
   return data;
 }
+
+// ─── Inventory image upload ───────────────────────────────────
+export async function uploadInventoryImage(file: File, itemId: string): Promise<string | null> {
+  const ext  = file.name.split('.').pop();
+  const path = `${itemId}.${ext}`;
+  const { error } = await supabase.storage
+    .from('inventory')
+    .upload(path, file, { upsert: true });
+  if (error) { console.error(error); return null; }
+  const { data } = supabase.storage.from('inventory').getPublicUrl(path);
+  return data.publicUrl;
+}
+
+export async function deleteInventoryItem(id: string) {
+  return supabase.from('inventory_items').delete().eq('id', id);
+}

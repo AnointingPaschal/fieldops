@@ -172,14 +172,14 @@ export default function WorkersPage() {
       <AnimatePresence>
         {showAdd && (
           <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-4"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[70] flex items-end md:items-center justify-center p-4 md:p-6"
             onClick={e => e.target === e.currentTarget && setShowAdd(false)}>
             <motion.div
               initial={{ y:24, opacity:0, scale:0.97 }}
               animate={{ y:0,  opacity:1, scale:1   }}
               exit={{   y:16, opacity:0, scale:0.97 }}
               transition={{ type:'spring', damping:28, stiffness:380 }}
-              className="bg-white rounded-2xl w-full max-w-md shadow-xl border border-line overflow-hidden"
+              className="bg-white rounded-2xl w-full max-w-md shadow-xl border border-line overflow-hidden mb-20 md:mb-0"
             >
               {/* Modal header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-line">

@@ -28,6 +28,7 @@ export interface InventoryItem {
   available_stock: number;
   unit: string;
   barcode: string | null;
+  image_url?: string | null;
 }
 
 export interface Task {
