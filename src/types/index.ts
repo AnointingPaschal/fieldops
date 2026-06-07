@@ -18,6 +18,7 @@ export interface Contractor {
   address: string | null;
   contact_name: string | null;
   phone: string | null;
+  email: string | null;
 }
 
 export interface InventoryItem {

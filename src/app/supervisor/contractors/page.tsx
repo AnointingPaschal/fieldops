@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, X, Loader2, Building2, Phone, MapPin, User,
-  Mail, Pencil, Trash2, CheckCircle, AlertCircle, Search,
+  Mail, Pencil, Trash2, CheckCircle, AlertCircle, Search, AtSign,
 } from 'lucide-react';
 import AppShell from '@/components/layout/AppShell';
 import {
@@ -12,7 +12,7 @@ import {
 } from '@/lib/api';
 import type { Contractor, Profile } from '@/types';
 
-const BLANK = { name:'', address:'', contact_name:'', phone:'' };
+const BLANK = { name:'', address:'', contact_name:'', phone:'', email:'' };
 type FormState = typeof BLANK;
 
 const list = { hidden:{}, visible:{ transition:{ staggerChildren:0.05 }}};
@@ -105,6 +105,15 @@ function ContractorModal({
                 <input className="input pl-10" placeholder="+1 (403) 000-0000"
                   value={form.phone} onChange={e => set('phone', e.target.value)} />
               </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="label">Email Address</label>
+            <div className="relative">
+              <AtSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+              <input type="email" className="input pl-10" placeholder="contact@company.com"
+                value={form.email} onChange={e => set('email', e.target.value)} />
             </div>
           </div>
 
@@ -325,6 +334,12 @@ export default function ContractorsPage() {
                           <a href={`tel:${c.phone}`} className="hover:text-sky transition-colors">{c.phone}</a>
                         </div>
                       )}
+                      {(c as any).email && (
+                        <div className="flex items-center gap-2 text-[12px] text-text-secondary">
+                          <Mail className="w-3.5 h-3.5 text-text-muted shrink-0" />
+                          <a href={`mailto:${(c as any).email}`} className="hover:text-sky transition-colors truncate">{(c as any).email}</a>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </motion.div>
@@ -342,7 +357,7 @@ export default function ContractorsPage() {
             mode={modal}
             initial={modal === 'edit' && editing
               ? { name: editing.name, address: editing.address || '',
-                  contact_name: editing.contact_name || '', phone: editing.phone || '' }
+                  contact_name: editing.contact_name || '', phone: editing.phone || '', email: (editing as any).email || '' }
               : BLANK}
             onClose={() => { setModal(null); setEditing(null); }}
             onSave={handleSave}
