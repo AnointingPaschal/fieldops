@@ -180,13 +180,13 @@ export default function DiscrepanciesPage() {
                                   <Phone className="w-3.5 h-3.5" /> Call
                                 </a>
                               )}
-                              {g.contractor.contact_name && (
-                                <a href={'mailto:' + ((g.contractor as any).email || 'admin@albertasafetycontrol.com') + '?subject=Discrepancy%20-%20' + encodeURIComponent(g.contractor.name)}
+                              {(g.contractor as any).email && (
+                                <a href={'mailto:' + (g.contractor as any).email + '?subject=Discrepancy%20Report%20-%20' + encodeURIComponent(g.contractor.name)}
                                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-navy/10 border border-navy/25 text-navy text-[12px] font-bold hover:bg-navy/20 transition-colors">
                                   <Mail className="w-3.5 h-3.5" /> Email
                                 </a>
                               )}
-                              {!g.contractor.phone && !g.contractor.contact_name && (
+                              {!g.contractor.phone && !(g.contractor as any).email && (
                                 <p className="text-[11px] text-text-muted italic">No contact info on file</p>
                               )}
                             </div>

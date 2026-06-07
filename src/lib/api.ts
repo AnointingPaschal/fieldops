@@ -409,9 +409,14 @@ export async function fetchDiscrepancyTasks() {
 }
 
 export async function fetchDiscrepancyCount(): Promise<number> {
-  const { count } = await supabase
+  // Count distinct contractors with discrepancies (matches the page grouping)
+  const { data } = await supabase
     .from('task_item_recovery')
-    .select('*', { count: 'exact', head: true })
+    .select('task:tasks(contractor:contractors(name))')
     .or('quantity_damaged.gt.0,quantity_missing.gt.0');
-  return count || 0;
+  if (!data) return 0;
+  const unique = new Set(
+    data.map((r: any) => r.task?.contractor?.name).filter(Boolean)
+  );
+  return unique.size;
 }
