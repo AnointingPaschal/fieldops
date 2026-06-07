@@ -188,3 +188,16 @@ export async function uploadInventoryImage(file: File, itemId: string): Promise<
 export async function deleteInventoryItem(id: string) {
   return supabase.from('inventory_items').delete().eq('id', id);
 }
+
+// ─── Contractors CRUD ─────────────────────────────────────────
+export async function createContractor(c: Omit<Contractor, 'id'>) {
+  return supabase.from('contractors').insert(c).select().single();
+}
+
+export async function updateContractor(id: string, c: Partial<Contractor>) {
+  return supabase.from('contractors').update(c).eq('id', id);
+}
+
+export async function deleteContractor(id: string) {
+  return supabase.from('contractors').delete().eq('id', id);
+}

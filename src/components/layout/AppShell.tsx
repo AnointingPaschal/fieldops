@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Plus, Package, Calendar, History,
   Home, Clock, Settings, LogOut, Shield, Bell,
-  ChevronRight, Users,
+  ChevronRight, Users, Building2,
 } from 'lucide-react';
 import type { Role } from '@/types';
 
@@ -13,6 +13,7 @@ const SUP_NAV = [
   { href:'/supervisor/dashboard',   label:'Dashboard',  icon:LayoutDashboard },
   { href:'/supervisor/create-task', label:'New Task',   icon:Plus            },
   { href:'/supervisor/workers',     label:'Workers',    icon:Users           },
+  { href:'/supervisor/contractors', label:'Contractors', icon:Building2       },
   { href:'/supervisor/inventory',   label:'Inventory',  icon:Package         },
   { href:'/supervisor/schedule',    label:'Schedule',   icon:Calendar        },
   { href:'/supervisor/history',     label:'History',    icon:History         },
