@@ -201,3 +201,68 @@ export async function updateContractor(id: string, c: Partial<Contractor>) {
 export async function deleteContractor(id: string) {
   return supabase.from('contractors').delete().eq('id', id);
 }
+
+// ─── Worker location ──────────────────────────────────────────
+export async function updateWorkerLocation(workerId: string, lat: number, lng: number) {
+  return supabase.from('profiles').update({
+    lat, lng, location_updated_at: new Date().toISOString()
+  }).eq('id', workerId);
+}
+
+// ─── Today's timesheet (check clock-in state) ─────────────────
+export async function fetchTodayEntry(workerId: string) {
+  const today = new Date().toISOString().split('T')[0];
+  const { data } = await supabase
+    .from('timesheet_entries')
+    .select('*')
+    .eq('worker_id', workerId)
+    .eq('date', today)
+    .maybeSingle();
+  return data;
+}
+
+// ─── Task updates (notes, photos, issues) ─────────────────────
+export async function addTaskUpdate(payload: {
+  task_id: string; worker_id: string;
+  type: 'note' | 'photo' | 'issue' | 'status';
+  content?: string; photo_url?: string;
+}) {
+  return supabase.from('task_updates').insert(payload).select().single();
+}
+
+export async function fetchTaskUpdates(taskId: string) {
+  const { data } = await supabase
+    .from('task_updates')
+    .select('*, worker:profiles(name)')
+    .eq('task_id', taskId)
+    .order('created_at', { ascending: false });
+  return data || [];
+}
+
+export async function uploadTaskPhoto(file: File, taskId: string, workerId: string): Promise<string | null> {
+  const ext  = file.name.split('.').pop();
+  const path = `${taskId}/${workerId}-${Date.now()}.${ext}`;
+  const { error } = await supabase.storage.from('task-photos').upload(path, file);
+  if (error) { console.error(error); return null; }
+  const { data } = supabase.storage.from('task-photos').getPublicUrl(path);
+  return data.publicUrl;
+}
+
+// ─── Worker tasks (assigned to me) ───────────────────────────
+export async function fetchWorkerTasks(workerId: string) {
+  const { data, error } = await supabase
+    .from('tasks')
+    .select(`
+      *,
+      contractor:contractors(*),
+      task_assignments!inner(worker_id),
+      task_items(quantity, item:inventory_items(*))
+    `)
+    .eq('task_assignments.worker_id', workerId)
+    .order('created_at', { ascending: false });
+  if (error) { console.error(error); return []; }
+  return (data || []).map((t: any) => ({
+    ...t,
+    items: t.task_items?.map((ti: any) => ({ item: ti.item, quantity: ti.quantity })) || [],
+  }));
+}
