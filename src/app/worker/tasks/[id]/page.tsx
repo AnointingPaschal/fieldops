@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import AppShell from '@/components/layout/AppShell';
 import Map from '@/components/ui/Map';
+import { supabase } from '@/lib/supabase';
 import {
   fetchTask, updateTaskStatus, fetchCurrentUser,
   completeTaskWithLocation, addTaskUpdate, uploadTaskPhoto,
@@ -72,6 +73,26 @@ export default function WorkerTaskDetail() {
     setTask(t); setUser(u); setUpdates(upd); setLoading(false);
   };
   useEffect(() => { if (taskId) load(); }, [taskId]);
+
+  // Real-time: watch this specific task for status changes
+  useEffect(() => {
+    if (!taskId) return;
+
+    const ch = supabase
+      .channel(`task-detail-${taskId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'tasks',
+        filter: `id=eq.${taskId}`,
+      }, payload => {
+        // Update task status without full reload
+        setTask(prev => prev ? { ...prev, ...payload.new } : prev);
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(ch); };
+  }, [taskId]);
 
   const openVerify = () => {
     if (!task?.items?.length) return;

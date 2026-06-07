@@ -12,3 +12,6 @@ alter table public.task_updates
 -- Enable real-time on profiles (for live location)
 alter publication supabase_realtime add table public.profiles;
 alter publication supabase_realtime add table public.tasks;
+
+-- Enable realtime on task_assignments and tasks (if not already)
+alter publication supabase_realtime add table public.task_assignments;

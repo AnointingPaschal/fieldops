@@ -136,17 +136,55 @@ export default function WorkerDashboard() {
     setLoading(false);
   };
 
-  // Wait for Supabase session to be ready before loading
+  // Wait for Supabase session to be ready
   useEffect(() => {
-    // Try immediately (works if session already in cache)
     load();
-    // Also listen for auth state — catches the case where session
-    // restores asynchronously after a hard reload
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') load();
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  // Real-time: watch for new task assignments + status changes
+  useEffect(() => {
+    if (!userRef.current) return;
+
+    const workerId = userRef.current.id;
+
+    const ch = supabase
+      .channel(`worker-tasks-${workerId}`)
+      // New assignment inserted for this worker
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'task_assignments',
+        filter: `worker_id=eq.${workerId}`,
+      }, () => {
+        load();
+        showToast('New task assigned to you!');
+      })
+      // Task status updated (catches supervisor changes)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'tasks',
+      }, () => {
+        // Refetch tasks silently
+        if (userRef.current) {
+          fetchWorkerTasks(userRef.current.id).then(myTasks => {
+            setTasks(myTasks);
+            const active = myTasks.find((t: Task) =>
+              ['Assigned','Accepted','In Transit'].includes(t.status)
+            ) || null;
+            setActiveTask(active);
+            activeTaskRef.current = active;
+          });
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(ch); };
+  }, [userRef.current?.id]);
 
   // ── GPS watch: auto-update location every ~60s while clocked in ──
   const startTracking = () => {
