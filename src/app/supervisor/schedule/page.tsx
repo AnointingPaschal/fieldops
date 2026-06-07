@@ -1,126 +1,122 @@
 'use client';
-import { useState } from 'react';
-import { Download } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { Download, Users, Loader2 } from 'lucide-react';
 import AppShell from '@/components/layout/AppShell';
-import { WORKERS } from '@/data/mockData';
+import { fetchWorkers, updateWorkerAvailability, fetchCurrentUser } from '@/lib/api';
+import type { Profile } from '@/types';
 
-const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-const DATES= ['Jun 1','Jun 2','Jun 3','Jun 4','Jun 5','Jun 6','Jun 7'];
+const DAYS  = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const TODAY = new Date();
+const WEEK  = Array.from({ length: 7 }, (_, i) => {
+  const d = new Date(TODAY);
+  const day = TODAY.getDay();
+  const monday = day === 0 ? -6 : 1 - day;
+  d.setDate(TODAY.getDate() + monday + i);
+  return { label: DAYS[i], date: d.getDate(), full: d.toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }) };
+});
 
 export default function SchedulePage() {
-  const [day, setDay] = useState(4);
-  const [avail, setAvail] = useState<Record<string,Record<number,boolean>>>(
-    Object.fromEntries(WORKERS.map(w=>[w.id,{0:true,1:true,2:true,3:true,4:true,5:w.avail,6:false}]))
-  );
-  const toggle=(id:string,d:number)=>setAvail(p=>({...p,[id]:{...p[id],[d]:!p[id][d]}}));
-  const count=WORKERS.filter(w=>avail[w.id]?.[day]).length;
+  const [workers,  setWorkers]  = useState<Profile[]>([]);
+  const [user,     setUser]     = useState<Profile | null>(null);
+  const [loading,  setLoading]  = useState(true);
+  const [day,      setDay]      = useState(Math.min((TODAY.getDay() + 6) % 7, 6));
+  const [toggling, setToggling] = useState<string | null>(null);
+
+  const load = async () => {
+    setLoading(true);
+    const [w, u] = await Promise.all([fetchWorkers(), fetchCurrentUser()]);
+    setWorkers(w); setUser(u); setLoading(false);
+  };
+  useEffect(() => { load(); }, []);
+
+  const toggle = async (worker: Profile) => {
+    setToggling(worker.id);
+    await updateWorkerAvailability(worker.id, !worker.available);
+    setWorkers(prev => prev.map(w => w.id === worker.id ? { ...w, available: !w.available } : w));
+    setToggling(null);
+  };
+
+  const available = workers.filter(w => w.available).length;
 
   return (
-    <AppShell role="supervisor" userName="Justin Okeke">
-      <div className="p-4 md:p-6 space-y-5">
+    <AppShell role="supervisor" userName={user?.name || 'Supervisor'}>
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-black text-text-primary">Scheduling</h1>
-            <p className="text-sm text-text-muted">Manage worker availability</p>
+            <h1 className="text-[15px] font-bold text-text-primary">Scheduling</h1>
+            <p className="text-[11px] text-text-muted">Manage worker availability</p>
           </div>
-          <button className="btn-ghost"><Download className="w-4 h-4"/>Export</button>
+          <button className="btn-ghost text-[12px]"><Download className="w-3.5 h-3.5" />Export</button>
         </div>
 
         {/* Day picker */}
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-          {DAYS.map((d,i)=>(
-            <button key={i} onClick={()=>setDay(i)}
-              className={`flex flex-col items-center px-4 py-3 rounded-2xl border-2 shrink-0 transition-all ${
-                day===i?'bg-navy border-navy text-white':'bg-white border-line text-text-secondary hover:border-slate-300'
+          {WEEK.map((d, i) => (
+            <motion.button key={i} whileTap={{ scale:0.95 }} onClick={() => setDay(i)}
+              className={`flex flex-col items-center px-3.5 py-2.5 rounded-xl border-2 shrink-0 transition-all ${
+                day === i ? 'bg-navy border-navy text-white' : 'bg-white border-line text-text-secondary hover:border-slate-300'
               }`}>
-              <span className="text-[10px] font-bold uppercase">{d}</span>
-              <span className="text-xl font-black mt-0.5">{DATES[i].split(' ')[1]}</span>
-              <span className="text-[9px] mt-0.5 opacity-60">{DATES[i].split(' ')[0]}</span>
-            </button>
+              <span className="text-[10px] font-bold uppercase">{d.label}</span>
+              <span className="text-lg font-black mt-0.5">{d.date}</span>
+            </motion.button>
           ))}
         </div>
 
-        {/* Summary */}
-        <div className="bg-pass-soft border border-pass-border rounded-2xl p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-white border border-pass-border flex items-center justify-center font-black text-pass text-lg">{count}</div>
+        {/* Count */}
+        <div className="bg-pass/10 border border-pass/20 rounded-xl p-3.5 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-pass/15 flex items-center justify-center">
+            <Users className="w-4 h-4 text-pass" />
+          </div>
           <div>
-            <p className="font-bold text-pass text-sm">{count} of {WORKERS.length} workers available</p>
-            <p className="text-xs text-green-600">{DAYS[day]}, {DATES[day]}</p>
+            {loading ? <div className="skel h-4 w-32 rounded mb-1" /> : (
+              <p className="font-semibold text-pass text-[13px]">{available} of {workers.length} workers available</p>
+            )}
+            <p className="text-[11px] text-green-600">{WEEK[day]?.full}</p>
           </div>
         </div>
 
-        {/* Worker table — desktop */}
-        <div className="card !p-0 overflow-hidden hidden md:block">
-          <div className="grid border-b border-line bg-slate-50" style={{gridTemplateColumns:'260px 1fr 120px'}}>
-            {['Worker','Week Grid',DAYS[day]].map(h=>(
-              <div key={h} className="px-5 py-3 text-xs font-bold text-text-muted uppercase tracking-wider">{h}</div>
-            ))}
-          </div>
-          {WORKERS.map(w=>{
-            const on=avail[w.id]?.[day];
-            return (
-              <div key={w.id} className={`grid border-b border-line last:border-0 hover:bg-slate-50/60 ${!on?'opacity-50':''}`}
-                style={{gridTemplateColumns:'260px 1fr 120px'}}>
-                <div className="px-5 py-4 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-navy flex items-center justify-center text-white text-xs font-black relative shrink-0">
-                    {w.name.split(' ').map(n=>n[0]).join('')}
-                    {w.avail&&<span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-pass border-2 border-white rounded-full"/>}
+        {/* Worker list */}
+        <div className="card !p-0 overflow-hidden">
+          {loading ? (
+            <div className="p-3 space-y-2">{[1,2,3,4,5].map(i => <div key={i} className="skel h-16 rounded-lg" />)}</div>
+          ) : workers.length === 0 ? (
+            <div className="empty">
+              <div className="empty-icon"><Users className="w-5 h-5 text-text-muted" /></div>
+              <p className="text-[13px] font-medium">No workers found</p>
+              <p className="text-[11px]">Add workers via Supabase authentication</p>
+            </div>
+          ) : (
+            <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }}>
+              {workers.map(w => (
+                <motion.div key={w.id} layout className="row">
+                  {/* Avatar */}
+                  <div className="w-9 h-9 rounded-full bg-navy flex items-center justify-center text-white text-[11px] font-black shrink-0 relative">
+                    {w.name.split(' ').map(n => n[0]).join('')}
+                    {w.available && <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-pass border-2 border-white rounded-full" />}
                   </div>
-                  <div>
-                    <p className="font-bold text-text-primary text-sm">{w.name}</p>
-                    <p className="text-xs text-text-muted">{w.title}</p>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-[13px] text-text-primary">{w.name}</p>
+                    <p className="text-[11px] text-text-muted">{w.job_title}</p>
+                    <span className={`inline-flex items-center gap-1 text-[10px] font-semibold mt-1 px-2 py-0.5 rounded-full ${w.available ? 'bg-pass/10 text-pass' : 'bg-slate-100 text-slate-400'}`}>
+                      <span className={`w-1 h-1 rounded-full ${w.available ? 'bg-pass animate-pulse' : 'bg-slate-400'}`} />
+                      {w.available ? 'Available' : 'Unavailable'}
+                    </span>
                   </div>
-                </div>
-                <div className="px-5 py-4 flex items-center gap-2">
-                  {DAYS.map((d,di)=>(
-                    <button key={di} onClick={()=>toggle(w.id,di)}
-                      className={`w-9 h-9 rounded-lg text-xs font-bold border-2 transition-all ${
-                        di===day?'ring-2 ring-sky ring-offset-1':''}
-                        ${avail[w.id]?.[di]?'bg-pass-soft border-pass-border text-pass hover:bg-green-100':'bg-slate-50 border-line text-text-muted hover:border-slate-300'
-                      }`}>{d[0]}</button>
-                  ))}
-                </div>
-                <div className="px-5 py-4 flex items-center justify-center">
-                  <button onClick={()=>toggle(w.id,day)}
-                    className={`relative w-12 h-6 rounded-full transition-all ${on?'bg-pass':'bg-slate-200'}`}>
-                    <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${on?'left-6':'left-0.5'}`}/>
+
+                  {/* Toggle */}
+                  <button onClick={() => toggle(w)} disabled={toggling === w.id}
+                    className={`relative w-11 h-6 rounded-full transition-all shrink-0 ${w.available ? 'bg-pass' : 'bg-slate-200'} disabled:opacity-60`}>
+                    {toggling === w.id
+                      ? <Loader2 className="w-3 h-3 text-white animate-spin absolute top-1.5 left-1/2 -translate-x-1/2" />
+                      : <motion.span layout className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${w.available ? 'left-5' : 'left-0.5'}`} />}
                   </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Worker cards — mobile */}
-        <div className="md:hidden space-y-3">
-          {WORKERS.map(w=>{
-            const on=avail[w.id]?.[day];
-            return (
-              <div key={w.id} className={`card flex items-center gap-4 ${!on?'opacity-50':''}`}>
-                <div className="w-10 h-10 rounded-full bg-navy flex items-center justify-center text-white text-xs font-black relative shrink-0">
-                  {w.name.split(' ').map(n=>n[0]).join('')}
-                  {w.avail&&<span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-pass border-2 border-white rounded-full"/>}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-sm text-text-primary">{w.name}</p>
-                  <p className="text-xs text-text-muted">{w.title}</p>
-                  <div className="flex gap-1 mt-2">
-                    {DAYS.map((_,di)=>(
-                      <button key={di} onClick={()=>toggle(w.id,di)}
-                        className={`w-7 h-7 rounded-md text-[9px] font-bold border ${di===day?'ring-1 ring-sky ring-offset-1':''}
-                          ${avail[w.id]?.[di]?'bg-pass-soft border-pass-border text-pass':'bg-slate-50 border-line text-text-muted'}`}>
-                        {DAYS[di][0]}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <button onClick={()=>toggle(w.id,day)}
-                  className={`relative w-12 h-6 rounded-full transition-all shrink-0 ${on?'bg-pass':'bg-slate-200'}`}>
-                  <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${on?'left-6':'left-0.5'}`}/>
-                </button>
-              </div>
-            );
-          })}
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
         </div>
       </div>
     </AppShell>
