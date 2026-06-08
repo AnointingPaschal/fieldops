@@ -14,3 +14,20 @@ create table if not exists public.task_item_recovery (
 alter table public.task_item_recovery enable row level security;
 create policy "Auth users CRUD task_item_recovery"
   on public.task_item_recovery for all using (auth.role() = 'authenticated');
+
+-- Report schedule configuration
+create table if not exists public.report_schedules (
+  id                uuid primary key default gen_random_uuid(),
+  frequency_value   integer  not null default 1,
+  frequency_unit    text     not null default 'weeks'
+                    check (frequency_unit in ('hours','days','weeks')),
+  recipients        text[]   not null default '{}',
+  enabled           boolean  not null default true,
+  last_sent_at      timestamptz,
+  next_send_at      timestamptz,
+  created_by        uuid references public.profiles,
+  updated_at        timestamptz not null default now()
+);
+alter table public.report_schedules enable row level security;
+create policy "Supervisors manage report schedules"
+  on public.report_schedules for all using (auth.role() = 'authenticated');

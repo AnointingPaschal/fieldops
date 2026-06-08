@@ -420,3 +420,38 @@ export async function fetchDiscrepancyCount(): Promise<number> {
   );
   return unique.size;
 }
+
+// ─── Report schedule ──────────────────────────────────────────
+export async function fetchReportSchedule() {
+  const { data } = await supabase
+    .from('report_schedules')
+    .select('*')
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data;
+}
+
+export async function saveReportSchedule(payload: {
+  frequency_value: number;
+  frequency_unit: 'hours' | 'days' | 'weeks';
+  recipients: string[];
+  enabled: boolean;
+  created_by: string;
+}) {
+  // Compute next send time
+  const ms: Record<string, number> = { hours: 3600000, days: 86400000, weeks: 604800000 };
+  const next_send_at = new Date(
+    Date.now() + payload.frequency_value * ms[payload.frequency_unit]
+  ).toISOString();
+
+  // Upsert — only keep one schedule row (delete existing first)
+  await supabase.from('report_schedules').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+
+  const { data, error } = await supabase
+    .from('report_schedules')
+    .insert({ ...payload, next_send_at, updated_at: new Date().toISOString() })
+    .select()
+    .single();
+  return { data, error };
+}
