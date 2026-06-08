@@ -477,3 +477,18 @@ export async function saveSettings(entries: Record<string, string>) {
   }));
   return supabase.from('app_settings').upsert(rows);
 }
+
+// ─── Company info ─────────────────────────────────────────────
+export const COMPANY_KEYS = [
+  'company_name','company_tagline','company_address',
+  'company_phone','company_email','company_website','company_logo_url',
+];
+
+export async function uploadCompanyLogo(file: File): Promise<string | null> {
+  const ext  = file.name.split('.').pop();
+  const path = `logo.${ext}`;
+  const { error } = await supabase.storage.from('company').upload(path, file, { upsert: true });
+  if (error) { console.error(error); return null; }
+  const { data } = supabase.storage.from('company').getPublicUrl(path);
+  return data.publicUrl + '?t=' + Date.now();
+}

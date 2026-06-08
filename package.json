@@ -17,7 +17,9 @@
     "clsx": "^2.1.1",
     "leaflet": "^1.9.4",
     "react-leaflet": "^4.2.1",
-    "nodemailer": "^6.9.14"
+    "nodemailer": "^6.9.14",
+    "jspdf": "^2.5.2",
+    "jspdf-autotable": "^3.8.4"
   },
   "devDependencies": {
     "@types/node": "^20.14.10",
