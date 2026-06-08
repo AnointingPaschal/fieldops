@@ -172,7 +172,8 @@ async function generatePDF(data: {
   return Buffer.from(doc.output('arraybuffer'));
 }
 
-// ── HTML email ─────────────────────────────────────────────────
+// ── HTML email — ASC brand colours ────────────────────────────
+// Primary: #D4560A (burnt orange)  Dark: #1A0800  Accent: #FF6B1A
 function buildEmailHtml(data: {
   period: string; tasks: any[]; workers: any[];
   discrepancies: any[]; company: Record<string,string>;
@@ -189,81 +190,119 @@ function buildEmailHtml(data: {
   const active    = tasks.filter(t=>!['Completed','Cancelled'].includes(t.status)).length;
   const hasD      = discrepancies.length > 0;
 
+  // ASC Brand colours
+  const ORANGE  = '#D4560A';
+  const DARK    = '#1A0800';
+  const ORANGE2 = '#FF6B1A';
+  const CREAM   = '#FFF8F3';
+  const BORDER  = '#FFD4B8';
+
+  const logoHtml = logoUrl
+    ? `<img src="${logoUrl}" alt="${name}" style="height:48px;max-width:160px;object-fit:contain;"/>`
+    : `<div style="display:inline-block;text-align:left;">
+        <div style="color:${ORANGE};font-weight:900;font-size:20px;line-height:1;font-family:'Georgia',serif;">Alberta</div>
+        <div style="color:${ORANGE};font-weight:900;font-size:20px;line-height:1;font-family:'Georgia',serif;">Safety</div>
+        <div style="color:${ORANGE};font-weight:900;font-size:20px;line-height:1;font-family:'Georgia',serif;">Control</div>
+       </div>`;
+
   const taskRows = tasks.slice(0,10).map(t=>`
-    <tr style="border-bottom:1px solid #E2E8F0;">
-      <td style="padding:10px 16px;font-size:13px;color:#0F172A;font-weight:600;">${t.contractor?.name||'—'}</td>
-      <td style="padding:10px 16px;font-size:12px;color:#64748B;">${t.type}</td>
-      <td style="padding:10px 16px;">
+    <tr style="border-bottom:1px solid #F0E8E0;">
+      <td style="padding:10px 14px;font-size:13px;color:#1A0800;font-weight:600;">${t.contractor?.name||'—'}</td>
+      <td style="padding:10px 14px;font-size:12px;color:#6B4A30;">${t.type}</td>
+      <td style="padding:10px 14px;">
         <span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;
-          background:${t.status==='Completed'?'#F0FDF4':t.status==='In Transit'?'#FFFBEB':'#EFF6FF'};
-          color:${t.status==='Completed'?'#16A34A':t.status==='In Transit'?'#D97706':'#1D4ED8'};">${t.status}</span>
+          background:${t.status==='Completed'?'#F0FDF4':t.status==='In Transit'?'#FFFBEB':'#FFF4EE'};
+          color:${t.status==='Completed'?'#16A34A':t.status==='In Transit'?'#D97706':ORANGE};">
+          ${t.status}
+        </span>
       </td>
-      <td style="padding:10px 16px;font-size:12px;color:#64748B;">${t.completed_at?new Date(t.completed_at).toLocaleDateString('en-CA',{month:'short',day:'numeric'}):'—'}</td>
+      <td style="padding:10px 14px;font-size:12px;color:#6B4A30;">
+        ${t.completed_at?new Date(t.completed_at).toLocaleDateString('en-CA',{month:'short',day:'numeric'}):'—'}
+      </td>
     </tr>`).join('');
 
   const discrepRows = discrepancies.slice(0,8).map((r:any)=>`
     <tr style="border-bottom:1px solid #FEE2E2;background:#FFF5F5;">
-      <td style="padding:9px 14px;font-size:12px;color:#0F172A;font-weight:600;">${r.task?.contractor?.name||'—'}</td>
-      <td style="padding:9px 14px;font-size:12px;color:#475569;">${r.item?.name||'—'}</td>
+      <td style="padding:9px 14px;font-size:12px;color:#1A0800;font-weight:600;">${r.task?.contractor?.name||'—'}</td>
+      <td style="padding:9px 14px;font-size:12px;color:#6B4A30;">${r.item?.name||'—'}</td>
       <td style="padding:9px 14px;font-size:12px;font-weight:700;color:#D97706;text-align:center;">${r.quantity_damaged||0}</td>
       <td style="padding:9px 14px;font-size:12px;font-weight:700;color:#DC2626;text-align:center;">${r.quantity_missing||0}</td>
     </tr>`).join('');
 
-  const logoHtml = logoUrl
-    ? `<img src="${logoUrl}" alt="${name}" style="height:40px;max-width:140px;object-fit:contain;"/>`
-    : `<div style="background:black;border-radius:8px;display:inline-block;padding:8px 12px;"><div style="color:#FF8C00;font-weight:900;font-size:14px;line-height:1.1;">Alberta</div><div style="color:white;font-weight:800;font-size:12px;line-height:1.1;">Safety</div><div style="color:white;font-weight:800;font-size:12px;line-height:1.1;">Control</div></div>`;
-
   return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>${name} — Operations Report</title></head>
-<body style="margin:0;padding:0;background:#F0F4F8;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
-<div style="max-width:640px;margin:32px auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,0.08);">
-  <div style="background:#0B1D35;padding:32px 40px;position:relative;overflow:hidden;">
-    <div style="position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;border:1px solid rgba(255,255,255,0.06);"></div>
+<body style="margin:0;padding:0;background:#F5EDE4;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+<div style="max-width:640px;margin:28px auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 40px rgba(80,20,0,0.15);">
+
+  <!-- ═══ HEADER ═══ -->
+  <div style="background:linear-gradient(135deg,${DARK} 0%,#2D1200 100%);padding:28px 36px;position:relative;overflow:hidden;">
+    <!-- Decorative circles -->
+    <div style="position:absolute;top:-50px;right:-50px;width:180px;height:180px;border-radius:50%;border:2px solid rgba(212,86,10,0.15);"></div>
+    <div style="position:absolute;bottom:-30px;left:-30px;width:120px;height:120px;border-radius:50%;border:1px solid rgba(212,86,10,0.1);"></div>
+    <!-- Orange accent line -->
+    <div style="position:absolute;left:0;top:0;bottom:0;width:5px;background:linear-gradient(180deg,${ORANGE} 0%,${ORANGE2} 100%);"></div>
+
     <table style="width:100%;border-collapse:collapse;"><tr>
-      <td style="vertical-align:middle;">${logoHtml}</td>
-      <td style="text-align:right;vertical-align:middle;">
-        <div style="color:rgba(255,255,255,0.4);font-size:11px;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">Operations Report</div>
-        <div style="color:white;font-size:15px;font-weight:800;">${period}</div>
+      <td style="vertical-align:middle;padding-left:8px;">${logoHtml}</td>
+      <td style="text-align:right;vertical-align:top;">
+        <div style="display:inline-block;background:${ORANGE};color:white;font-size:10px;font-weight:800;padding:5px 12px;border-radius:20px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Operations Report</div><br/>
+        <div style="color:white;font-size:14px;font-weight:700;">${period}</div>
       </td>
     </tr></table>
-    <div style="margin-top:24px;">
-      <div style="color:rgba(255,255,255,0.5);font-size:12px;margin-bottom:5px;">Your field operations summary is ready</div>
-      <div style="color:white;font-size:22px;font-weight:900;line-height:1.2;">Field Operations<br/>Summary Report</div>
+
+    <div style="margin-top:22px;padding-left:8px;">
+      <div style="color:rgba(255,200,150,0.65);font-size:12px;margin-bottom:5px;font-style:italic;">Oilfield Safety Specialists</div>
+      <div style="color:white;font-size:22px;font-weight:900;line-height:1.15;letter-spacing:-0.5px;">
+        Field Operations<br/><span style="color:${ORANGE2};">Summary Report</span>
+      </div>
     </div>
   </div>
-  <div style="background:#1D4ED8;">
+
+  <!-- ═══ STATS BAND ═══ -->
+  <div style="background:linear-gradient(135deg,${ORANGE} 0%,#B33D00 100%);">
     <table style="width:100%;border-collapse:collapse;"><tr>
       ${[{l:'Total Tasks',v:tasks.length,i:'📋'},{l:'Completed',v:completed,i:'✅'},{l:'Active',v:active,i:'⚡'},{l:'Workers',v:workers.length,i:'👷'}]
-        .map(s=>`<td style="padding:16px 10px;text-align:center;border-right:1px solid rgba(255,255,255,0.1);">
-          <div style="font-size:18px;margin-bottom:3px;">${s.i}</div>
-          <div style="color:white;font-size:22px;font-weight:900;line-height:1;">${s.v}</div>
-          <div style="color:rgba(255,255,255,0.55);font-size:10px;margin-top:3px;text-transform:uppercase;letter-spacing:0.05em;">${s.l}</div>
+        .map(s=>`<td style="padding:16px 8px;text-align:center;border-right:1px solid rgba(255,255,255,0.15);">
+          <div style="font-size:16px;margin-bottom:3px;">${s.i}</div>
+          <div style="color:white;font-size:24px;font-weight:900;line-height:1;text-shadow:0 1px 3px rgba(0,0,0,0.2);">${s.v}</div>
+          <div style="color:rgba(255,230,210,0.8);font-size:10px;margin-top:3px;text-transform:uppercase;letter-spacing:0.06em;">${s.l}</div>
         </td>`).join('')}
     </tr></table>
   </div>
-  <div style="padding:32px 40px;">
+
+  <!-- ═══ BODY ═══ -->
+  <div style="padding:28px 36px;">
+
+    <!-- Tasks -->
     <div style="margin-bottom:28px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-        <h2 style="margin:0;font-size:14px;font-weight:800;color:#0F172A;text-transform:uppercase;letter-spacing:0.05em;">Task Activity</h2>
-        <span style="font-size:11px;color:#94A3B8;font-weight:600;">${tasks.length} total · PDF attached</span>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:4px;height:20px;background:${ORANGE};border-radius:2px;"></div>
+          <h2 style="margin:0;font-size:14px;font-weight:800;color:${DARK};text-transform:uppercase;letter-spacing:0.06em;">Task Activity</h2>
+        </div>
+        <span style="font-size:11px;color:#9A7060;font-weight:600;">${tasks.length} total · PDF attached</span>
       </div>
-      <div style="border-radius:12px;overflow:hidden;border:1px solid #E2E8F0;">
+      <div style="border-radius:12px;overflow:hidden;border:1px solid #F0E8E0;box-shadow:0 1px 4px rgba(80,20,0,0.06);">
         <table style="width:100%;border-collapse:collapse;">
-          <thead><tr style="background:#F8FAFC;">
-            ${['Contractor','Type','Status','Completed'].map(h=>`<th style="padding:9px 16px;text-align:left;font-size:11px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #E2E8F0;">${h}</th>`).join('')}
+          <thead><tr style="background:#FFF4EE;">
+            ${['Contractor','Type','Status','Completed'].map(h=>`<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;color:#9A5030;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #F0E0D0;">${h}</th>`).join('')}
           </tr></thead>
-          <tbody>${taskRows||'<tr><td colspan="4" style="padding:20px;text-align:center;color:#94A3B8;font-size:13px;">No tasks in this period</td></tr>'}</tbody>
+          <tbody>${taskRows||`<tr><td colspan="4" style="padding:20px;text-align:center;color:#9A7060;font-size:13px;font-style:italic;">No tasks in this period</td></tr>`}</tbody>
         </table>
-        ${tasks.length>10?`<div style="padding:10px 16px;background:#F8FAFC;text-align:center;font-size:12px;color:#64748B;border-top:1px solid #E2E8F0;">+${tasks.length-10} more tasks — see attached PDF</div>`:''}
+        ${tasks.length>10?`<div style="padding:10px 14px;background:#FFF4EE;text-align:center;font-size:12px;color:#9A5030;border-top:1px solid #F0E0D0;font-style:italic;">+${tasks.length-10} more tasks — see attached PDF</div>`:''}
       </div>
     </div>
+
+    <!-- Discrepancies -->
     ${hasD?`
     <div style="margin-bottom:28px;">
-      <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:10px;">
+      <div style="background:#FEF2F2;border:2px solid #FECACA;border-radius:12px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:10px;">
         <div style="font-size:22px;">⚠️</div>
-        <div><div style="font-size:13px;font-weight:800;color:#DC2626;margin-bottom:2px;">Item Discrepancies Detected</div>
-        <div style="font-size:12px;color:#B91C1C;">${discrepancies.length} item(s) — see full breakdown in the attached PDF</div></div>
+        <div>
+          <div style="font-size:13px;font-weight:800;color:#DC2626;margin-bottom:2px;">Item Discrepancies Detected</div>
+          <div style="font-size:12px;color:#B91C1C;">${discrepancies.length} item(s) with missing or damaged status</div>
+        </div>
       </div>
       <div style="border-radius:12px;overflow:hidden;border:1px solid #FECACA;">
         <table style="width:100%;border-collapse:collapse;">
@@ -278,28 +317,41 @@ function buildEmailHtml(data: {
       <div style="font-size:22px;">✅</div>
       <div style="font-size:13px;font-weight:700;color:#16A34A;">No discrepancies — all equipment accounted for</div>
     </div>`}
-    <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:16px 20px;margin-bottom:28px;display:flex;align-items:center;gap:12px;">
+
+    <!-- PDF notice -->
+    <div style="background:${CREAM};border:1px solid ${BORDER};border-radius:12px;padding:14px 18px;margin-bottom:24px;display:flex;align-items:center;gap:12px;">
       <div style="font-size:22px;">📎</div>
-      <div><div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:2px;">Full PDF Report Attached</div>
-      <div style="font-size:12px;color:#64748B;">A complete PDF with all tasks, workers and discrepancy breakdowns is attached to this email.</div></div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:${DARK};margin-bottom:2px;">Full PDF Report Attached</div>
+        <div style="font-size:12px;color:#9A5030;">Complete breakdown with all tasks and discrepancies attached as PDF.</div>
+      </div>
     </div>
+
+    <!-- CTA -->
     <div style="text-align:center;margin-bottom:28px;">
       <a href="${process.env.NEXT_PUBLIC_APP_URL||'https://fieldops.vercel.app'}/supervisor/dashboard"
-        style="display:inline-block;background:#0B1D35;color:white;font-size:14px;font-weight:800;padding:14px 36px;border-radius:12px;text-decoration:none;">
+        style="display:inline-block;background:linear-gradient(135deg,${ORANGE} 0%,#B33D00 100%);color:white;font-size:14px;font-weight:800;padding:14px 40px;border-radius:12px;text-decoration:none;letter-spacing:0.02em;box-shadow:0 4px 16px rgba(212,86,10,0.35);">
         View Full Dashboard →
       </a>
     </div>
   </div>
-  <div style="background:#F8FAFC;border-top:1px solid #E2E8F0;padding:22px 40px;text-align:center;">
-    <div style="font-size:13px;font-weight:800;color:#0F172A;margin-bottom:3px;">${name}</div>
-    <div style="font-size:11px;color:#94A3B8;margin-bottom:2px;">${email}${phone?` · ${phone}`:''}${address?` · ${address}`:''}</div>
-    ${website?`<div style="font-size:11px;color:#94A3B8;margin-bottom:10px;">${website}</div>`:''}
-    <div style="font-size:10px;color:#CBD5E1;line-height:1.6;">
-      This report was automatically generated by FieldOps.<br/>
+
+  <!-- ═══ FOOTER ═══ -->
+  <div style="background:${DARK};padding:22px 36px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+      <div style="width:3px;height:16px;background:${ORANGE};border-radius:2px;"></div>
+      <div style="font-size:14px;font-weight:800;color:white;">${name}</div>
+    </div>
+    <div style="font-size:11px;color:rgba(255,200,150,0.6);line-height:1.8;">
+      ${[email, phone, address, website].filter(Boolean).join(' &nbsp;·&nbsp; ')}
+    </div>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08);font-size:10px;color:rgba(255,255,255,0.25);line-height:1.7;text-align:center;">
+      This report was automatically generated by FieldOps &nbsp;·&nbsp; ${name}<br/>
       <em>"ALL Hours MUST be signed and authorized by supervisor before being sent in"</em>
     </div>
   </div>
-</div></body></html>`;
+</div>
+</body></html>`;
 }
 
 // ── Send via provider ──────────────────────────────────────────
