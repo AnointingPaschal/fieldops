@@ -455,3 +455,25 @@ export async function saveReportSchedule(payload: {
     .single();
   return { data, error };
 }
+
+// ─── App settings ─────────────────────────────────────────────
+export async function fetchSettings(keys: string[]): Promise<Record<string, string>> {
+  const { data } = await supabase
+    .from('app_settings')
+    .select('key, value')
+    .in('key', keys);
+  const map: Record<string, string> = {};
+  (data || []).forEach((r: any) => { map[r.key] = r.value; });
+  return map;
+}
+
+export async function saveSetting(key: string, value: string) {
+  return supabase.from('app_settings').upsert({ key, value, updated_at: new Date().toISOString() });
+}
+
+export async function saveSettings(entries: Record<string, string>) {
+  const rows = Object.entries(entries).map(([key, value]) => ({
+    key, value, updated_at: new Date().toISOString(),
+  }));
+  return supabase.from('app_settings').upsert(rows);
+}

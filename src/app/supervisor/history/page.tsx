@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Share2, FileText, History, Package, RefreshCw,
-  Truck, Wrench, Trash2, Clock, Mail, Plus, X,
-  Save, Loader2, CheckCircle, AlertCircle, Bell,
+  Wrench, Trash2, Clock, Mail, Plus, X,
+  Save, Loader2, CheckCircle, AlertCircle, Bell, Send,
 } from 'lucide-react';
 import AppShell from '@/components/layout/AppShell';
 import {
@@ -57,6 +57,7 @@ export default function HistoryPage() {
   const [saving,    setSaving]    = useState(false);
   const [saved,     setSaved]     = useState(false);
   const [emailErr,  setEmailErr]  = useState('');
+  const [sending,   setSending]   = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -107,6 +108,17 @@ export default function HistoryPage() {
       const sched = await fetchReportSchedule();
       setSchedule(sched);
     }
+  };
+
+  const sendNow = async () => {
+    setSending(true);
+    try {
+      const res  = await fetch('/api/send-report', { method:'POST', headers:{'Content-Type':'application/json'}, body:'{}' });
+      const json = await res.json();
+      if (res.ok) alert('Report sent to ' + json.sent + ' recipient(s)!');
+      else alert(json.error || 'Failed to send.');
+    } catch { alert('Error sending report.'); }
+    setSending(false);
   };
 
   return (
@@ -202,9 +214,15 @@ export default function HistoryPage() {
                       : 'Enable to resume automatic reports'}
                   </p>
                 </div>
-                <span className={`badge text-[10px] shrink-0 ${schedule.enabled?'bg-pass/10 text-pass':'bg-slate-100 text-slate-400'}`}>
-                  {schedule.enabled ? 'Active' : 'Paused'}
-                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <motion.button whileTap={{scale:0.97}} onClick={sendNow} disabled={sending}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky/10 border border-sky/25 text-sky text-[12px] font-bold hover:bg-sky/20 transition-colors disabled:opacity-50">
+                    {sending?<Loader2 className="w-3.5 h-3.5 animate-spin"/>:<><Send className="w-3.5 h-3.5"/>Send Now</>}
+                  </motion.button>
+                  <span className={`badge text-[10px] ${schedule.enabled?'bg-pass/10 text-pass':'bg-slate-100 text-slate-400'}`}>
+                    {schedule.enabled ? 'Active' : 'Paused'}
+                  </span>
+                </div>
               </motion.div>
             )}
 

@@ -31,3 +31,13 @@ create table if not exists public.report_schedules (
 alter table public.report_schedules enable row level security;
 create policy "Supervisors manage report schedules"
   on public.report_schedules for all using (auth.role() = 'authenticated');
+
+-- App settings (API keys, config)
+create table if not exists public.app_settings (
+  key        text primary key,
+  value      text not null,
+  updated_at timestamptz not null default now()
+);
+alter table public.app_settings enable row level security;
+create policy "Authenticated users manage settings"
+  on public.app_settings for all using (auth.role() = 'authenticated');

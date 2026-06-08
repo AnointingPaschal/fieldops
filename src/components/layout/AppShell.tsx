@@ -24,6 +24,7 @@ const SUP_SIDEBAR = [
   { href:'/supervisor/history',     label:'History',     icon:History         },
   { href:'/supervisor/live-map',    label:'Live Map',    icon:Navigation      },
   { href:'/supervisor/discrepancies', label:'Discrepancies',icon:AlertTriangle   },
+  { href:'/supervisor/settings',     label:'Settings',    icon:Settings        },
 ];
 
 // ── Bottom nav (mobile only) — key items only ─────────────────
@@ -173,6 +174,11 @@ export default function AppShell({
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {role === 'supervisor' && (
+              <button onClick={() => { triggerNav(); router.push('/supervisor/settings'); }} className="btn-icon" title="Settings">
+                <Settings className="w-4 h-4 text-text-secondary" />
+              </button>
+            )}
             <button className="relative btn-icon">
               <Bell className="w-4 h-4 text-text-secondary" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-fail rounded-full border border-white" />
