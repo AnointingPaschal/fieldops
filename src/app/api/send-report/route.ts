@@ -19,7 +19,7 @@ async function generatePDF(data: {
   const completed = tasks.filter(t => t.status === 'Completed').length;
   const active    = tasks.filter(t => !['Completed','Cancelled'].includes(t.status)).length;
 
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
   const W   = doc.internal.pageSize.getWidth();
   let y     = 0;
 
@@ -27,18 +27,7 @@ async function generatePDF(data: {
   doc.setFillColor(11, 29, 53); // navy
   doc.rect(0, 0, W, 36, 'F');
 
-  // Logo (if available)
-  if (company.company_logo_url) {
-    try {
-      const res = await fetch(company.company_logo_url);
-      const buf = await res.arrayBuffer();
-      const b64 = Buffer.from(buf).toString('base64');
-      const ext = company.company_logo_url.includes('.png') ? 'PNG' : 'JPEG';
-      doc.addImage(`data:image/${ext.toLowerCase()};base64,${b64}`, ext, 8, 6, 24, 24);
-    } catch { /* skip logo on error */ }
-  }
-
-  // Company name
+  // Company name (no logo in PDF to keep file size small)
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(14); doc.setFont('helvetica','bold');
   doc.text(company.company_name || 'Alberta Safety Control', 36, 16);
@@ -96,7 +85,7 @@ async function generatePDF(data: {
   autoTable(doc, {
     startY: y,
     head: [['Contractor','Type','Status','Created','Completed']],
-    body: tasks.slice(0, 30).map(t => [
+    body: tasks.slice(0, 20).map(t => [
       t.contractor?.name || '—',
       t.type,
       t.status,
@@ -316,7 +305,7 @@ function buildEmailHtml(data: {
 // ── Send via provider ──────────────────────────────────────────
 async function sendEmail(opts: {
   provider: string; settings: Record<string,string>;
-  to: string[]; subject: string; html: string; pdfBuffer: Buffer;
+  to: string[]; subject: string; html: string; pdfBuffer: Buffer | null;
   period: string;
 }) {
   const { provider, settings, to, subject, html, pdfBuffer, period } = opts;
@@ -335,11 +324,7 @@ async function sendEmail(opts: {
           To:   [{ Email: email }],
           Subject: subject,
           HTMLPart: html,
-          Attachments: [{
-            ContentType: 'application/pdf',
-            Filename: filename,
-            Base64Content: pdfBuffer.toString('base64'),
-          }],
+          ...(pdfBuffer ? { Attachments: [{ ContentType: 'application/pdf', Filename: filename, Base64Content: pdfBuffer.toString('base64') }] } : {}),
         })),
       }),
     });
@@ -356,7 +341,7 @@ async function sendEmail(opts: {
       await transporter.sendMail({
         from:    `"${settings.gmail_from_name||'Alberta Safety Control'}" <${settings.gmail_email}>`,
         to:      email, subject, html,
-        attachments: [{ filename, content: pdfBuffer, contentType: 'application/pdf' }],
+        ...(pdfBuffer ? { attachments: [{ filename, content: pdfBuffer, contentType: 'application/pdf' }] } : {}),
       });
     }
     return { sent: to.length };
@@ -396,12 +381,13 @@ export async function POST(req: NextRequest) {
     const company = s;
     const payload = { period, tasks:tasks||[], workers:workers||[], discrepancies:discrepancies||[], company };
 
+    const sendPdf = s.send_pdf_attachment !== 'false';
     const [html, pdfBuffer] = await Promise.all([
       buildEmailHtml(payload),
-      generatePDF(payload),
+      sendPdf ? generatePDF(payload) : Promise.resolve(null),
     ]);
 
-    const result = await sendEmail({ provider, settings:s, to:recipients, subject, html, pdfBuffer, period });
+    const result = await sendEmail({ provider, settings:s, to:recipients, subject, html, pdfBuffer: pdfBuffer as Buffer | null, period });
 
     if (!isTest && schedule) {
       const ms: Record<string,number> = { hours:3600000, days:86400000, weeks:604800000 };

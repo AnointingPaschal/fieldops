@@ -58,6 +58,7 @@ export default function HistoryPage() {
   const [saved,     setSaved]     = useState(false);
   const [emailErr,  setEmailErr]  = useState('');
   const [sending,   setSending]   = useState(false);
+  const [pdfEnabled, setPdfEnabled] = useState(true);
 
   useEffect(() => {
     const load = async () => {
@@ -73,6 +74,10 @@ export default function HistoryPage() {
         setEnabled(sched.enabled);
         setEmails(sched.recipients || []);
       }
+      // Fetch PDF preference
+      const { fetchSettings } = await import('@/lib/api');
+      const pdfSetting = await fetchSettings(['send_pdf_attachment']);
+      setPdfEnabled(pdfSetting.send_pdf_attachment !== 'false');
       setLoading(false);
     };
     load();
@@ -94,6 +99,8 @@ export default function HistoryPage() {
     if (!user) return;
     if (emails.length === 0) { setEmailErr('Add at least one recipient email.'); return; }
     setSaving(true);
+    const { saveSetting } = await import('@/lib/api');
+    await saveSetting('send_pdf_attachment', pdfEnabled ? 'true' : 'false');
     const { error } = await saveReportSchedule({
       frequency_value: freqVal,
       frequency_unit:  freqUnit,
@@ -335,6 +342,23 @@ export default function HistoryPage() {
               </div>
 
               {/* Save */}
+              {/* PDF attachment toggle */}
+              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-line">
+                <div className="flex-1 min-w-0 pr-4">
+                  <p className="font-semibold text-[13px] text-text-primary">Attach PDF Report</p>
+                  <p className="text-[11px] text-text-muted mt-0.5">
+                    {pdfEnabled
+                      ? 'A full PDF is attached to every report email'
+                      : 'Reports sent as email only — no PDF attachment'}
+                  </p>
+                </div>
+                <button onClick={() => setPdfEnabled(v => !v)}
+                  className={`relative w-11 h-6 rounded-full transition-all shrink-0 ${pdfEnabled ? 'bg-pass' : 'bg-slate-200'}`}>
+                  <motion.span layout
+                    className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${pdfEnabled ? 'left-5' : 'left-0.5'}`}/>
+                </button>
+              </div>
+
               <motion.button whileTap={{scale:0.97}} onClick={saveSchedule}
                 disabled={saving || emails.length === 0}
                 className="btn-navy w-full justify-center disabled:opacity-40 py-3 text-[14px]">
