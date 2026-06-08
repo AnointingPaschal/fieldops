@@ -107,16 +107,15 @@ async function generatePDF(data: {
     bodyStyles: { fontSize:8, textColor:[15,23,42] },
     alternateRowStyles: { fillColor:[248,250,252] },
     columnStyles: {
-      2: { cellWidth: 24,
-        didParseCell: (d: any) => {
-          if (d.section==='body') {
-            const status = d.cell.raw;
-            if (status==='Completed') d.cell.styles.textColor=[22,163,74];
-            else if (status==='In Transit') d.cell.styles.textColor=[217,119,6];
-            else d.cell.styles.textColor=[29,78,216];
-          }
-        }
-      },
+      2: { cellWidth: 24 },
+    },
+    didParseCell: (d: any) => {
+      if (d.section === 'body' && d.column.index === 2) {
+        const status = d.cell.raw;
+        if (status === 'Completed') d.cell.styles.textColor = [22, 163, 74];
+        else if (status === 'In Transit') d.cell.styles.textColor = [217, 119, 6];
+        else d.cell.styles.textColor = [29, 78, 216];
+      }
     },
     margin: { left: 14, right: 14 },
     styles: { cellPadding: 2.5 },
